@@ -1,0 +1,5 @@
+# SDKMAN configuration for auto-ledger
+# This file enables automatic Java version switching when entering the project directory
+# Enable with: sdk env install
+
+java=21-amzn

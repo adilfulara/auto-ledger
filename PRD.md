@@ -1,7 +1,7 @@
 # 🛠️ AI Agent Prompt: Car Mileage Tracker (Production Edition)
 
 ## 1. 🎯 Objective
-Build a production-grade, low-cost **Car Mileage Tracking Application** ("MileageMate") that serves two masters:
+Build a production-grade, low-cost **Car Mileage Tracking Application** ("auto-ledger") that serves two masters:
 1.  **Humans:** Via a responsive **Next.js** web interface.
 2.  **AI Agents:** Via a compliant **Model Context Protocol (MCP)** server.
 
@@ -16,7 +16,7 @@ This project is divided into two distinct sub-projects to maintain context effic
 
 ### 2.1 Directory Layout
 ```text
-/mileage-mate
+/auto-ledger
 ├── CLAUDE.md           # Master context rules (This file)
 ├── Makefile            # Unified orchestration commands
 ├── backend/            # [Sub-Project] Java Spring Boot 3
@@ -96,8 +96,8 @@ The build **must fail** if these metrics are not met.
 The backend exposes an MCP Server via Server-Sent Events (SSE) for AI clients (Claude Desktop, Cursor).
 
 ### 6.1 Resources (Read-Only)
-* `mileagemate://garage/cars` - List of all cars owned by the user.
-* `mileagemate://cars/{id}/history` - Last 50 fill-up logs for trend analysis.
+* `autoledger://garage/cars` - List of all cars owned by the user.
+* `autoledger://cars/{id}/history` - Last 50 fill-up logs for trend analysis.
 
 ### 6.2 Tools (Executable Actions)
 * `log_fillup`

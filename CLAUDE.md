@@ -19,6 +19,28 @@ This project uses a **TDD + GitHub Issues workflow**:
 
 **CRITICAL: NEVER commit directly to `main` branch.** Always use feature branches and PRs. The repository is configured for squash and merge to maintain a clean history.
 
+## Local Development Environment
+
+**Java Version Management:**
+
+This project uses **Java 21 (Amazon Corretto)**. Use SDKMAN to manage Java versions:
+
+```bash
+# Install SDKMAN (if not already installed)
+curl -s "https://get.sdkman.io" | bash
+
+# Install Java 21 (Amazon Corretto)
+sdk install java 21-amzn
+
+# Set as default
+sdk default java 21-amzn
+
+# Verify version
+java -version  # Should show "Corretto-21.x.x"
+```
+
+**IMPORTANT:** Always use SDKMAN for Java version management to ensure consistency across environments.
+
 ## Build Commands
 
 **Always use Makefile targets** (never raw `mvn` or `npm` commands):

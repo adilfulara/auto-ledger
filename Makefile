@@ -39,7 +39,7 @@ dev: ## Start both backend and frontend (run in separate terminals)
 # --- 🛡️ GATES & OPS ---
 check-coverage: ## Run Tests & Verify 80% Coverage
 	@echo "🔍 Checking Backend Coverage..."
-	cd backend && ./mvnw verify jacoco:check
+	cd backend && ./mvnw verify
 	@echo "🔍 Checking Frontend Coverage..."
 	cd frontend && npm run test:coverage
 

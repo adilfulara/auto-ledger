@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  backend:
+    name: Backend Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Build backend
+        run: make build-backend
+
+      - name: Run backend tests
+        run: make test-backend
+
+      - name: Check backend coverage
+        run: cd backend && ./mvnw verify
+
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          echo "## Backend Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Parse JaCoCo CSV report
+          if [ -f backend/target/site/jacoco/jacoco.csv ]; then
+            # Extract overall coverage from CSV (last line is total)
+            COVERAGE_LINE=$(tail -n 1 backend/target/site/jacoco/jacoco.csv)
+
+            # Parse CSV: GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+            INSTRUCTION_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f4)
+            INSTRUCTION_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f5)
+            BRANCH_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f6)
+            BRANCH_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f7)
+            LINE_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f8)
+            LINE_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f9)
+
+            # Calculate percentages
+            if [ "$INSTRUCTION_MISSED" != "INSTRUCTION_MISSED" ]; then
+              INSTRUCTION_TOTAL=$((INSTRUCTION_MISSED + INSTRUCTION_COVERED))
+              BRANCH_TOTAL=$((BRANCH_MISSED + BRANCH_COVERED))
+              LINE_TOTAL=$((LINE_MISSED + LINE_COVERED))
+
+              if [ $INSTRUCTION_TOTAL -gt 0 ]; then
+                INSTRUCTION_PCT=$(awk "BEGIN {printf \"%.1f\", ($INSTRUCTION_COVERED / $INSTRUCTION_TOTAL) * 100}")
+              else
+                INSTRUCTION_PCT="0.0"
+              fi
+
+              if [ $BRANCH_TOTAL -gt 0 ]; then
+                BRANCH_PCT=$(awk "BEGIN {printf \"%.1f\", ($BRANCH_COVERED / $BRANCH_TOTAL) * 100}")
+              else
+                BRANCH_PCT="N/A"
+              fi
+
+              if [ $LINE_TOTAL -gt 0 ]; then
+                LINE_PCT=$(awk "BEGIN {printf \"%.1f\", ($LINE_COVERED / $LINE_TOTAL) * 100}")
+              else
+                LINE_PCT="0.0"
+              fi
+
+              echo "| Metric | Coverage | Covered | Total |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|----------|---------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| **Instructions** | ${INSTRUCTION_PCT}% | ${INSTRUCTION_COVERED} | ${INSTRUCTION_TOTAL} |" >> $GITHUB_STEP_SUMMARY
+              echo "| **Branches** | ${BRANCH_PCT}% | ${BRANCH_COVERED} | ${BRANCH_TOTAL} |" >> $GITHUB_STEP_SUMMARY
+              echo "| **Lines** | ${LINE_PCT}% | ${LINE_COVERED} | ${LINE_TOTAL} |" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **Minimum Required:** 80% Line and Branch Coverage" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ No coverage data available (CSV header only)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ JaCoCo CSV report not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
+
+  frontend:
+    name: Frontend Build & Test
+    runs-on: ubuntu-latest
+    # Skip frontend until issue #4 is completed
+    if: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: make build-frontend
+
+      - name: Run frontend tests
+        run: make test-frontend
+
+      - name: Check frontend coverage
+        run: cd frontend && npm run test:coverage
