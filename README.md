@@ -118,6 +118,16 @@ Backend test coverage is enforced at **80% minimum** for both line and branch co
 - Detailed HTML reports are available as artifacts in each CI run
 - Download the `jacoco-report` artifact from any CI run to view detailed coverage
 
+## Code Reviews
+
+This project supports AI-assisted code reviews via Claude:
+
+**On-Demand Reviews:**
+1. **Manual trigger via @claude**: Comment `@claude please review this PR` on any PR or issue
+2. **GitHub Actions UI**: Go to Actions → Claude Code Review → Run workflow → Enter PR number
+
+**Note:** Automatic reviews on every commit are disabled to save usage. Use manual triggers when you need a review.
+
 ## Contributing
 
 See [CLAUDE.md](./CLAUDE.md) for development guidelines and context management rules.
