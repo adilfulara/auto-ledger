@@ -2,15 +2,18 @@ package me.adilfulara.autoledger;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
+/**
+ * Basic application context test.
+ * Verifies that the Spring Boot application starts correctly with all configurations.
+ * Uses H2 in-memory database configured in application.yml.
+ */
 @SpringBootTest
-@ActiveProfiles("test")
 class AutoLedgerApplicationTests {
 
     @Test
     void contextLoads() {
-        // This test ensures the Spring context loads successfully
+        // This test ensures the Spring context loads successfully with Flyway migrations
     }
 
 }
