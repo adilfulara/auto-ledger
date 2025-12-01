@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: auto-ledger-test
+
+  # Default test datasource (H2 for unit tests)
+  # Integration tests override with Testcontainers PostgreSQL
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  flyway:
+    enabled: false  # Disabled by default, enabled in integration tests
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://test.clerk.accounts.dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    root: WARN
+    me.adilfulara.autoledger: INFO
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN

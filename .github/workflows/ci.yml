@@ -39,16 +39,15 @@ jobs:
 
           # Parse JaCoCo CSV report
           if [ -f backend/target/site/jacoco/jacoco.csv ]; then
-            # Extract overall coverage from CSV (last line is total)
-            COVERAGE_LINE=$(tail -n 1 backend/target/site/jacoco/jacoco.csv)
-
+            # Sum all rows (skip header) to get total coverage across all classes
             # Parse CSV: GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-            INSTRUCTION_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f4)
-            INSTRUCTION_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f5)
-            BRANCH_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f6)
-            BRANCH_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f7)
-            LINE_MISSED=$(echo "$COVERAGE_LINE" | cut -d',' -f8)
-            LINE_COVERED=$(echo "$COVERAGE_LINE" | cut -d',' -f9)
+            INSTRUCTION_MISSED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$4} END {print sum}')
+            INSTRUCTION_COVERED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$5} END {print sum}')
+            BRANCH_MISSED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$6} END {print sum}')
+            BRANCH_COVERED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$7} END {print sum}')
+            LINE_MISSED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$8} END {print sum}')
+            LINE_COVERED=$(tail -n +2 backend/target/site/jacoco/jacoco.csv | awk -F',' '{sum+=$9} END {print sum}')
+
 
             # Calculate percentages
             if [ "$INSTRUCTION_MISSED" != "INSTRUCTION_MISSED" ]; then
