@@ -111,7 +111,7 @@ class DatabaseSchemaIntegrationTest {
         // Verify car
         assertThat(car.getId()).isNotNull();
         assertThat(car.getMake()).isEqualTo("Tesla");
-        assertThat(car.getPrimaryFuelUnit()).isEqualTo(FuelUnit.GALLONS);
+        assertThat(car.getFuelUnit()).isEqualTo(FuelUnit.GALLONS);
 
         // Find by user
         List<Car> userCars = carRepository.findByUserId(testUser.getId());
@@ -143,10 +143,8 @@ class DatabaseSchemaIntegrationTest {
                 Instant.now(),
                 50000L,
                 new BigDecimal("12.500"),
-                FuelUnit.GALLONS,
                 new BigDecimal("3.999"),
                 new BigDecimal("49.99"),
-                DistanceUnit.MILES,
                 false,
                 false
         );
@@ -167,10 +165,8 @@ class DatabaseSchemaIntegrationTest {
                 Instant.now(),
                 51000L,
                 new BigDecimal("10.000"),
-                FuelUnit.GALLONS,
                 new BigDecimal("4.00"),
                 new BigDecimal("40.00"),
-                DistanceUnit.MILES,
                 null,  // Should default to false
                 null   // Should default to false
         );
@@ -199,10 +195,8 @@ class DatabaseSchemaIntegrationTest {
                 Instant.now(),
                 10000L,
                 new BigDecimal("20.000"),
-                FuelUnit.GALLONS,
                 new BigDecimal("4.00"),
                 new BigDecimal("80.00"),
-                DistanceUnit.MILES,
                 false,
                 false
         );
