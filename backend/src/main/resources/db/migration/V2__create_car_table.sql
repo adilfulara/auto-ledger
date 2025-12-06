@@ -7,8 +7,8 @@ CREATE TABLE cars (
     year INTEGER NOT NULL CHECK (year >= 1900 AND year <= 2100),
     vin VARCHAR(17) UNIQUE,
     name VARCHAR(100) NOT NULL,
-    primary_fuel_unit VARCHAR(20) NOT NULL DEFAULT 'GALLONS' CHECK (primary_fuel_unit IN ('GALLONS', 'LITERS')),
-    primary_distance_unit VARCHAR(20) NOT NULL DEFAULT 'MILES' CHECK (primary_distance_unit IN ('MILES', 'KILOMETERS')),
+    fuel_unit VARCHAR(20) NOT NULL DEFAULT 'GALLONS' CHECK (fuel_unit IN ('GALLONS', 'LITERS')),
+    distance_unit VARCHAR(20) NOT NULL DEFAULT 'MILES' CHECK (distance_unit IN ('MILES', 'KILOMETERS')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -27,5 +27,5 @@ COMMENT ON TABLE cars IS 'User vehicles for mileage tracking';
 COMMENT ON COLUMN cars.user_id IS 'References users.id (internal UUID)';
 COMMENT ON COLUMN cars.vin IS 'Vehicle Identification Number (17 characters, optional)';
 COMMENT ON COLUMN cars.name IS 'User-friendly name for the car (e.g., "My Tesla", "Work Truck")';
-COMMENT ON COLUMN cars.primary_fuel_unit IS 'Default unit for fuel volume (GALLONS or LITERS)';
-COMMENT ON COLUMN cars.primary_distance_unit IS 'Default unit for distance (MILES or KILOMETERS)';
+COMMENT ON COLUMN cars.fuel_unit IS 'Unit for fuel volume (GALLONS or LITERS), immutable after creation';
+COMMENT ON COLUMN cars.distance_unit IS 'Unit for distance (MILES or KILOMETERS), immutable after creation';

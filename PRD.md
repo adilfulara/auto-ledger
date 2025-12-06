@@ -81,10 +81,11 @@ The build **must fail** if these metrics are not met.
 
 ### `Car`
 * **Fields:** `id` (UUID), `user_id` (FK), `make`, `model`, `year`, `vin`, `name`.
-* **Settings:** `primary_fuel_unit` (Enum: GALLONS/LITERS), `primary_distance_unit` (Enum: MILES/KM).
+* **Units (immutable after creation):** `fuel_unit` (Enum: GALLONS/LITERS), `distance_unit` (Enum: MILES/KM).
 
 ### `Fillup`
 * **Fields:** `id` (UUID), `car_id` (FK), `date` (Timestamp), `odometer` (Long), `fuel_volume` (Decimal), `price_per_unit` (Decimal), `total_cost` (Decimal).
+* **Units:** Inherited from parent `Car` entity (no unit fields on Fillup).
 * **Flags:**
     * `is_partial` (Boolean): User did not fill the tank to the top (Logic: Skip MPG calc).
     * `is_missed` (Boolean): User forgot to log the previous fill-up (Logic: Break MPG chain).
