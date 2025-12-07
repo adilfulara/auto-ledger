@@ -13,12 +13,6 @@ spring:
   flyway:
     enabled: false  # Disabled by default, enabled in integration tests
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://test.clerk.accounts.dev
-
 management:
   endpoints:
     web:

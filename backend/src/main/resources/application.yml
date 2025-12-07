@@ -15,12 +15,6 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${CLERK_ISSUER_URI:}
-
 # Actuator endpoints for health checks
 management:
   endpoints:
