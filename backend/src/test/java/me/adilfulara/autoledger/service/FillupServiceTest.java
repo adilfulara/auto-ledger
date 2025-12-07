@@ -2,7 +2,6 @@ package me.adilfulara.autoledger.service;
 
 import me.adilfulara.autoledger.domain.model.Fillup;
 import me.adilfulara.autoledger.domain.repository.FillupRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -71,8 +69,8 @@ class FillupServiceTest {
                 // Arrange
                 UUID fillupId = UUID.randomUUID();
                 Fillup current = createNormalFillup(fillupId, 10000L, new BigDecimal("10.0"));
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(current));
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10000L))
+                        .thenReturn(Optional.empty());
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -120,11 +118,11 @@ class FillupServiceTest {
                 // Arrange
                 UUID prevId = UUID.randomUUID();
                 UUID currId = UUID.randomUUID();
-                Fillup previous = createNormalFillup(prevId, 10000L, new BigDecimal("10.0"));
+                Fillup anchor = createNormalFillup(prevId, 10000L, new BigDecimal("10.0"));
                 Fillup current = createNormalFillup(currId, 10300L, new BigDecimal("10.0"));
 
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(previous, current));
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10300L))
+                        .thenReturn(Optional.of(anchor));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -142,15 +140,15 @@ class FillupServiceTest {
                     "10000, 10250, 10.0, 25.00",   // 250 miles / 10 gal = 25 MPG
                     "10000, 10350, 12.5, 28.00"    // 350 miles / 12.5 gal = 28 MPG
             })
-            void calculatesCorrectMPG(long prevOdo, long currOdo, String fuel, String expectedMpg) {
+            void calculatesCorrectMPG(long anchorOdo, long currOdo, String fuel, String expectedMpg) {
                 // Arrange
-                UUID prevId = UUID.randomUUID();
+                UUID anchorId = UUID.randomUUID();
                 UUID currId = UUID.randomUUID();
-                Fillup previous = createNormalFillup(prevId, prevOdo, new BigDecimal("10.0"));
+                Fillup anchor = createNormalFillup(anchorId, anchorOdo, new BigDecimal("10.0"));
                 Fillup current = createNormalFillup(currId, currOdo, new BigDecimal(fuel));
 
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(previous, current));
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, currOdo))
+                        .thenReturn(Optional.of(anchor));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -166,23 +164,23 @@ class FillupServiceTest {
         class WhenPreviousWasPartial {
 
             @Test
-            @DisplayName("accumulates distance when previous fillup was partial")
-            void accumulatesDistance_whenPreviousWasPartial() {
+            @DisplayName("skips partial fillups and uses last full fillup as anchor")
+            void usesLastFullFillupAsAnchor_whenPreviousWasPartial() {
                 // Arrange
-                // Fillup 1: odometer=10000, isPartial=false (ANCHOR)
-                // Fillup 2: odometer=10150, isPartial=true  (SKIP - partial)
+                // Database query returns the anchor directly, skipping partial fillups
+                // Fillup 1: odometer=10000, isPartial=false (ANCHOR - returned by query)
+                // Fillup 2: odometer=10150, isPartial=true  (SKIPPED by query)
                 // Fillup 3: odometer=10300, isPartial=false (CURRENT)
-                // MPG = (10300 - 10000) / 10.0 = 30.0 (uses Fillup 1 as anchor)
-                UUID id1 = UUID.randomUUID();
-                UUID id2 = UUID.randomUUID();
-                UUID id3 = UUID.randomUUID();
+                // MPG = (10300 - 10000) / 10.0 = 30.0
+                UUID anchorId = UUID.randomUUID();
+                UUID currId = UUID.randomUUID();
 
-                Fillup anchor = createNormalFillup(id1, 10000L, new BigDecimal("10.0"));
-                Fillup partial = createFillup(id2, 10150L, new BigDecimal("5.0"), true, false);
-                Fillup current = createNormalFillup(id3, 10300L, new BigDecimal("10.0"));
+                Fillup anchor = createNormalFillup(anchorId, 10000L, new BigDecimal("10.0"));
+                Fillup current = createNormalFillup(currId, 10300L, new BigDecimal("10.0"));
 
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(anchor, partial, current));
+                // The optimized query returns only the anchor, skipping partials
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10300L))
+                        .thenReturn(Optional.of(anchor));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -193,49 +191,14 @@ class FillupServiceTest {
             }
 
             @Test
-            @DisplayName("accumulates all distance when multiple previous fillups were partial")
-            void accumulatesAllDistance_whenMultiplePartials() {
-                // Arrange
-                // Fillup 1: odometer=10000, isPartial=false (ANCHOR)
-                // Fillup 2: odometer=10100, isPartial=true  (SKIP)
-                // Fillup 3: odometer=10200, isPartial=true  (SKIP)
-                // Fillup 4: odometer=10400, isPartial=false (CURRENT)
-                // MPG = (10400 - 10000) / 10.0 = 40.0
-                UUID id1 = UUID.randomUUID();
-                UUID id2 = UUID.randomUUID();
-                UUID id3 = UUID.randomUUID();
-                UUID id4 = UUID.randomUUID();
+            @DisplayName("returns empty when no full fillup exists before current")
+            void returnsEmpty_whenNoFullFillupExists() {
+                // Arrange - query returns empty because all previous fillups were partial
+                UUID currId = UUID.randomUUID();
+                Fillup current = createNormalFillup(currId, 10300L, new BigDecimal("10.0"));
 
-                Fillup anchor = createNormalFillup(id1, 10000L, new BigDecimal("10.0"));
-                Fillup partial1 = createFillup(id2, 10100L, new BigDecimal("5.0"), true, false);
-                Fillup partial2 = createFillup(id3, 10200L, new BigDecimal("5.0"), true, false);
-                Fillup current = createNormalFillup(id4, 10400L, new BigDecimal("10.0"));
-
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(anchor, partial1, partial2, current));
-
-                // Act
-                Optional<BigDecimal> result = fillupService.calculateMPG(current);
-
-                // Assert - 400 miles / 10 gallons = 40 MPG
-                assertThat(result).isPresent();
-                assertThat(result.get()).isEqualByComparingTo(new BigDecimal("40.00"));
-            }
-
-            @Test
-            @DisplayName("returns empty when all previous fillups were partial")
-            void returnsEmpty_whenAllPreviousWerePartial() {
-                // Arrange - no anchor point exists
-                UUID id1 = UUID.randomUUID();
-                UUID id2 = UUID.randomUUID();
-                UUID id3 = UUID.randomUUID();
-
-                Fillup partial1 = createFillup(id1, 10000L, new BigDecimal("5.0"), true, false);
-                Fillup partial2 = createFillup(id2, 10100L, new BigDecimal("5.0"), true, false);
-                Fillup current = createNormalFillup(id3, 10300L, new BigDecimal("10.0"));
-
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(partial1, partial2, current));
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10300L))
+                        .thenReturn(Optional.empty());
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -276,22 +239,19 @@ class FillupServiceTest {
             }
 
             @Test
-            @DisplayName("returns empty when fillup has lower odometer than existing (appears as first)")
-            void returnsEmpty_whenOdometerLowerThanExisting() {
-                // Arrange - current has lower odometer, so appears first in ordered list
-                UUID prevId = UUID.randomUUID();
+            @DisplayName("returns empty when no fillup exists before current odometer")
+            void returnsEmpty_whenNoFillupBeforeCurrent() {
+                // Arrange - query returns empty because no fillup exists before current odometer
                 UUID currId = UUID.randomUUID();
-                Fillup existing = createNormalFillup(prevId, 10300L, new BigDecimal("10.0"));
                 Fillup current = createNormalFillup(currId, 10000L, new BigDecimal("10.0"));
 
-                // When ordered by odometer ASC, current appears first
-                when(fillupRepository.findByCarIdOrderByOdometerAsc(CAR_ID))
-                        .thenReturn(List.of(current, existing));
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10000L))
+                        .thenReturn(Optional.empty());
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
 
-                // Assert - treated as first fillup, returns empty
+                // Assert - no previous fillup, returns empty
                 assertThat(result).isEmpty();
             }
         }

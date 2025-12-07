@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,12 +33,12 @@ public class FillupService {
      *   <li>Otherwise, calculates: (current_odometer - anchor_odometer) / fuel_volume</li>
      * </ul>
      * <p>
-     * When previous fillups were partial, the algorithm "looks back" to find the last
-     * full fillup (anchor point) and uses that for the distance calculation.
+     * The query is optimized to fetch only the anchor fillup (the most recent non-partial
+     * fillup before the current one), avoiding loading all fillups into memory.
      *
      * @param current the fillup to calculate MPG for
      * @return Optional containing the MPG value (scale 2), or empty if MPG cannot be calculated
-     * @throws IllegalArgumentException if fuel volume is zero/negative or odometer is invalid
+     * @throws IllegalArgumentException if fuel volume is zero/negative
      */
     public Optional<BigDecimal> calculateMPG(Fillup current) {
         // Validate fuel volume
@@ -53,25 +52,16 @@ public class FillupService {
             return Optional.empty();
         }
 
-        // Get all fillups for this car ordered by odometer
-        List<Fillup> fillups = fillupRepository.findByCarIdOrderByOdometerAsc(current.getCarId());
+        // Optimized: Single query to find anchor (last full fillup before current)
+        Optional<Fillup> anchor = fillupRepository.findLastFullFillupBefore(
+                current.getCarId(), current.getOdometer());
 
-        // Find the current fillup's position in the list
-        int currentIndex = findFillupIndex(fillups, current);
-
-        // Cannot calculate if this is the first fillup
-        if (currentIndex <= 0) {
-            return Optional.empty();
-        }
-
-        // Find the anchor point - walk backwards to find the last full fillup
-        Fillup anchor = findAnchorFillup(fillups, currentIndex);
-        if (anchor == null) {
+        if (anchor.isEmpty()) {
             return Optional.empty();
         }
 
         // Calculate MPG: (current_odometer - anchor_odometer) / fuel_volume
-        long distance = current.getOdometer() - anchor.getOdometer();
+        long distance = current.getOdometer() - anchor.get().getOdometer();
         BigDecimal mpg = BigDecimal.valueOf(distance)
                 .divide(current.getFuelVolume(), MPG_SCALE, RoundingMode.HALF_UP);
 
@@ -85,37 +75,5 @@ public class FillupService {
         if (fuelVolume == null || fuelVolume.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("fuel volume must be positive");
         }
-    }
-
-    /**
-     * Finds the index of the given fillup in the list.
-     * Returns -1 if not found.
-     */
-    private int findFillupIndex(List<Fillup> fillups, Fillup target) {
-        for (int i = 0; i < fillups.size(); i++) {
-            if (fillups.get(i).getId().equals(target.getId())) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Finds the anchor fillup - the most recent non-partial fillup before the current one.
-     * This is used as the reference point for MPG calculation.
-     *
-     * @param fillups list of fillups ordered by odometer
-     * @param currentIndex index of the current fillup
-     * @return the anchor fillup, or null if no valid anchor exists
-     */
-    private Fillup findAnchorFillup(List<Fillup> fillups, int currentIndex) {
-        for (int i = currentIndex - 1; i >= 0; i--) {
-            Fillup candidate = fillups.get(i);
-            // A valid anchor is a non-partial fillup
-            if (!Boolean.TRUE.equals(candidate.getIsPartial())) {
-                return candidate;
-            }
-        }
-        return null;
     }
 }
