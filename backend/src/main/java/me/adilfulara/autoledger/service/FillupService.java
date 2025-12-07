@@ -30,11 +30,11 @@ public class FillupService {
      *   <li>If the current fillup is partial (tank not filled), returns empty</li>
      *   <li>If the current fillup is missed (user missed logging previous), returns empty</li>
      *   <li>If there's no previous full fillup to reference, returns empty</li>
-     *   <li>Otherwise, calculates: (current_odometer - anchor_odometer) / fuel_volume</li>
+     *   <li>Otherwise, calculates: (current_odometer - anchor_odometer) / total_fuel</li>
      * </ul>
      * <p>
-     * The query is optimized to fetch only the anchor fillup (the most recent non-partial
-     * fillup before the current one), avoiding loading all fillups into memory.
+     * The total fuel includes all fillups between the anchor and current (inclusive of current,
+     * exclusive of anchor). This correctly handles partial fillups by accumulating their fuel.
      *
      * @param current the fillup to calculate MPG for
      * @return Optional containing the MPG value (scale 2), or empty if MPG cannot be calculated
@@ -52,7 +52,7 @@ public class FillupService {
             return Optional.empty();
         }
 
-        // Optimized: Single query to find anchor (last full fillup before current)
+        // Find anchor (last full fillup before current)
         Optional<Fillup> anchor = fillupRepository.findLastFullFillupBefore(
                 current.getCarId(), current.getOdometer());
 
@@ -60,10 +60,14 @@ public class FillupService {
             return Optional.empty();
         }
 
-        // Calculate MPG: (current_odometer - anchor_odometer) / fuel_volume
+        // Sum all fuel between anchor and current (handles partial fillups)
+        BigDecimal totalFuel = fillupRepository.sumFuelBetween(
+                current.getCarId(), anchor.get().getOdometer(), current.getOdometer());
+
+        // Calculate MPG: (current_odometer - anchor_odometer) / total_fuel
         long distance = current.getOdometer() - anchor.get().getOdometer();
         BigDecimal mpg = BigDecimal.valueOf(distance)
-                .divide(current.getFuelVolume(), MPG_SCALE, RoundingMode.HALF_UP);
+                .divide(totalFuel, MPG_SCALE, RoundingMode.HALF_UP);
 
         return Optional.of(mpg);
     }

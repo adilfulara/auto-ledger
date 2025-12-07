@@ -123,6 +123,8 @@ class FillupServiceTest {
 
                 when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10300L))
                         .thenReturn(Optional.of(anchor));
+                when(fillupRepository.sumFuelBetween(CAR_ID, 10000L, 10300L))
+                        .thenReturn(new BigDecimal("10.0"));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -149,6 +151,8 @@ class FillupServiceTest {
 
                 when(fillupRepository.findLastFullFillupBefore(CAR_ID, currOdo))
                         .thenReturn(Optional.of(anchor));
+                when(fillupRepository.sumFuelBetween(CAR_ID, anchorOdo, currOdo))
+                        .thenReturn(new BigDecimal(fuel));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
@@ -164,30 +168,62 @@ class FillupServiceTest {
         class WhenPreviousWasPartial {
 
             @Test
-            @DisplayName("skips partial fillups and uses last full fillup as anchor")
-            void usesLastFullFillupAsAnchor_whenPreviousWasPartial() {
+            @DisplayName("accumulates fuel from partial fillups in MPG calculation")
+            void accumulatesFuelFromPartials() {
                 // Arrange
-                // Database query returns the anchor directly, skipping partial fillups
-                // Fillup 1: odometer=10000, isPartial=false (ANCHOR - returned by query)
-                // Fillup 2: odometer=10150, isPartial=true  (SKIPPED by query)
-                // Fillup 3: odometer=10300, isPartial=false (CURRENT)
-                // MPG = (10300 - 10000) / 10.0 = 30.0
+                // Fillup 1: odometer=10000, isPartial=false (ANCHOR)
+                // Fillup 2: odometer=10150, isPartial=true, fuel=5.0
+                // Fillup 3: odometer=10300, isPartial=false, fuel=10.0 (CURRENT)
+                // Total fuel = 5.0 + 10.0 = 15.0
+                // MPG = (10300 - 10000) / 15.0 = 20.0
                 UUID anchorId = UUID.randomUUID();
                 UUID currId = UUID.randomUUID();
 
                 Fillup anchor = createNormalFillup(anchorId, 10000L, new BigDecimal("10.0"));
                 Fillup current = createNormalFillup(currId, 10300L, new BigDecimal("10.0"));
 
-                // The optimized query returns only the anchor, skipping partials
                 when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10300L))
                         .thenReturn(Optional.of(anchor));
+                // Sum includes partial (5.0) + current (10.0) = 15.0
+                when(fillupRepository.sumFuelBetween(CAR_ID, 10000L, 10300L))
+                        .thenReturn(new BigDecimal("15.0"));
 
                 // Act
                 Optional<BigDecimal> result = fillupService.calculateMPG(current);
 
-                // Assert - 300 miles / 10 gallons = 30 MPG
+                // Assert - 300 miles / 15 gallons = 20 MPG
                 assertThat(result).isPresent();
-                assertThat(result.get()).isEqualByComparingTo(new BigDecimal("30.00"));
+                assertThat(result.get()).isEqualByComparingTo(new BigDecimal("20.00"));
+            }
+
+            @Test
+            @DisplayName("accumulates fuel from multiple partial fillups")
+            void accumulatesFuelFromMultiplePartials() {
+                // Arrange
+                // Fillup 1: odometer=10000, isPartial=false (ANCHOR)
+                // Fillup 2: odometer=10100, isPartial=true, fuel=3.0
+                // Fillup 3: odometer=10200, isPartial=true, fuel=4.0
+                // Fillup 4: odometer=10400, isPartial=false, fuel=10.0 (CURRENT)
+                // Total fuel = 3.0 + 4.0 + 10.0 = 17.0
+                // MPG = (10400 - 10000) / 17.0 = 23.53
+                UUID anchorId = UUID.randomUUID();
+                UUID currId = UUID.randomUUID();
+
+                Fillup anchor = createNormalFillup(anchorId, 10000L, new BigDecimal("10.0"));
+                Fillup current = createNormalFillup(currId, 10400L, new BigDecimal("10.0"));
+
+                when(fillupRepository.findLastFullFillupBefore(CAR_ID, 10400L))
+                        .thenReturn(Optional.of(anchor));
+                // Sum includes partial1 (3.0) + partial2 (4.0) + current (10.0) = 17.0
+                when(fillupRepository.sumFuelBetween(CAR_ID, 10000L, 10400L))
+                        .thenReturn(new BigDecimal("17.0"));
+
+                // Act
+                Optional<BigDecimal> result = fillupService.calculateMPG(current);
+
+                // Assert - 400 miles / 17 gallons = 23.53 MPG
+                assertThat(result).isPresent();
+                assertThat(result.get()).isEqualByComparingTo(new BigDecimal("23.53"));
             }
 
             @Test

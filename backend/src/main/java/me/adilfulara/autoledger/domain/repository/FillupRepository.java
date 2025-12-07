@@ -6,6 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,4 +81,20 @@ public interface FillupRepository extends CrudRepository<Fillup, UUID> {
            "ORDER BY odometer DESC LIMIT 1")
     Optional<Fillup> findLastFullFillupBefore(@Param("carId") UUID carId,
                                                @Param("currentOdometer") Long currentOdometer);
+
+    /**
+     * Sum fuel volume for all fillups between anchor and current (exclusive anchor, inclusive current).
+     * Used for MPG calculation to accumulate fuel from partial fillups.
+     *
+     * @param carId the car's UUID
+     * @param anchorOdometer the anchor fillup's odometer (exclusive)
+     * @param currentOdometer the current fillup's odometer (inclusive)
+     * @return total fuel volume, or null if no fillups in range
+     */
+    @Query("SELECT SUM(fuel_volume) FROM fillups WHERE car_id = :carId " +
+           "AND odometer > :anchorOdometer " +
+           "AND odometer <= :currentOdometer")
+    BigDecimal sumFuelBetween(@Param("carId") UUID carId,
+                               @Param("anchorOdometer") Long anchorOdometer,
+                               @Param("currentOdometer") Long currentOdometer);
 }

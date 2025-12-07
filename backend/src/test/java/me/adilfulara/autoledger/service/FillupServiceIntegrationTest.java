@@ -171,8 +171,8 @@ class FillupServiceIntegrationTest {
         }
 
         @Test
-        @DisplayName("accumulates distance over partial fillups")
-        void accumulatesDistance_overPartialFillups() {
+        @DisplayName("accumulates fuel from partial fillups in MPG calculation")
+        void accumulatesFuel_overPartialFillups() {
             // Arrange - anchor, partial, current
             Fillup anchor = createAndSaveFillup(10000L, new BigDecimal("10.0"), false, false, 0);
             Fillup partial = createAndSaveFillup(10150L, new BigDecimal("5.0"), true, false, 7);
@@ -181,13 +181,13 @@ class FillupServiceIntegrationTest {
             // Act
             Optional<BigDecimal> result = fillupService.calculateMPG(current);
 
-            // Assert - uses anchor: (10300 - 10000) / 10.0 = 30 MPG
+            // Assert - total fuel = 5.0 + 10.0 = 15.0, MPG = 300 / 15.0 = 20 MPG
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualByComparingTo(new BigDecimal("30.00"));
+            assertThat(result.get()).isEqualByComparingTo(new BigDecimal("20.00"));
         }
 
         @Test
-        @DisplayName("handles multiple partial fillups in sequence")
+        @DisplayName("accumulates fuel from multiple partial fillups")
         void handlesMultiplePartialFillups() {
             // Arrange - anchor, partial1, partial2, current
             Fillup anchor = createAndSaveFillup(10000L, new BigDecimal("10.0"), false, false, 0);
@@ -198,9 +198,9 @@ class FillupServiceIntegrationTest {
             // Act
             Optional<BigDecimal> result = fillupService.calculateMPG(current);
 
-            // Assert - uses anchor: (10400 - 10000) / 10.0 = 40 MPG
+            // Assert - total fuel = 3.0 + 4.0 + 10.0 = 17.0, MPG = 400 / 17.0 = 23.53 MPG
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualByComparingTo(new BigDecimal("40.00"));
+            assertThat(result.get()).isEqualByComparingTo(new BigDecimal("23.53"));
         }
 
         @Test
