@@ -1,0 +1,210 @@
+### Fillups API Test Requests
+### Use IntelliJ HTTP Client to run these requests against your local development server
+### Start the server with: make dev-start
+
+
+### VARIABLES
+
+@baseUrl = http://localhost:9090
+@teslaCarId = c2ddef77-7a2b-6ef8-99fc-499b9d482c33
+@civicCarId = d3eeff66-6b3c-7df9-88eb-388a8c593d44
+@f150CarId = e4fff055-5c4d-8ef0-77da-277b7d604e55
+
+# Sample fillup IDs from our seed data
+@teslaFillup1 = 10000000-0000-0000-0000-000000000001
+@teslaFillup2 = 10000000-0000-0000-0000-000000000002
+@civicFillup1 = 20000000-0000-0000-0000-000000000001
+@f150Fillup1 = 30000000-0000-0000-0000-000000000001
+
+### 1. GET ALL FILLUPS - Tesla Model 3
+### Should return 12 fillups ordered by date
+GET {{baseUrl}}/api/cars/{{teslaCarId}}/fillups
+
+### 2. GET ALL FILLUPS - Honda Civic
+### Should return 12 fillups ordered by date
+GET {{baseUrl}}/api/cars/{{civicCarId}}/fillups
+
+### 3. GET ALL FILLUPS - Ford F-150
+### Should return 12 fillups ordered by date
+GET {{baseUrl}}/api/cars/{{f150CarId}}/fillups
+
+### 4. GET RECENT FILLUPS - Tesla (last 5)
+GET {{baseUrl}}/api/cars/{{teslaCarId}}/fillups/recent?limit=5
+
+### 5. GET RECENT FILLUPS - Civic (last 3)
+GET {{baseUrl}}/api/cars/{{civicCarId}}/fillups/recent?limit=3
+
+### 6. GET FILLUP BY ID - Tesla first fillup
+GET {{baseUrl}}/api/fillups/{{teslaFillup1}}
+
+### 7. GET FILLUP BY ID - Tesla second fillup (has MPG)
+GET {{baseUrl}}/api/fillups/{{teslaFillup2}}
+
+### 8. GET FILLUP BY ID - Civic first fillup
+GET {{baseUrl}}/api/fillups/{{civicFillup1}}
+
+### 9. CREATE FILLUP - Normal fillup for Tesla
+### Odometer should be higher than last fillup (9660)
+POST {{baseUrl}}/api/fillups?carId={{teslaCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-05-31T10:30:00Z",
+  "odometer": 10100,
+  "fuelVolume": 12.5,
+  "pricePerUnit": 4.35,
+  "totalCost": 54.38,
+  "isPartial": false,
+  "isMissed": false
+}
+
+
+### 10. CREATE FILLUP - Partial fill for Civic
+POST {{baseUrl}}/api/fillups?carId={{civicCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-01T14:00:00Z",
+  "odometer": 21500,
+  "fuelVolume": 20.0,
+  "pricePerUnit": 1.95,
+  "totalCost": 39.00,
+  "isPartial": true,
+  "isMissed": false
+}
+
+
+### 11. CREATE FILLUP - Missed previous fill for F-150
+POST {{baseUrl}}/api/fillups?carId={{f150CarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-02T09:00:00Z",
+  "odometer": 30200,
+  "fuelVolume": 45.0,
+  "pricePerUnit": 4.10,
+  "totalCost": 184.50,
+  "isPartial": false,
+  "isMissed": true
+}
+
+
+### 12. CREATE FILLUP - Minimal required fields
+POST {{baseUrl}}/api/fillups?carId={{teslaCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-07T08:00:00Z",
+  "odometer": 10500,
+  "fuelVolume": 11.0,
+  "pricePerUnit": 4.40,
+  "totalCost": 48.40
+}
+
+
+### 13. UPDATE FILLUP - Update fuel amount and cost
+PUT {{baseUrl}}/api/fillups/{{teslaFillup1}}
+Content-Type: application/json
+
+{
+  "fuelVolume": 12.0,
+  "totalCost": 46.68
+}
+
+
+### 14. UPDATE FILLUP - Mark as partial fill
+PUT {{baseUrl}}/api/fillups/{{civicFillup1}}
+Content-Type: application/json
+
+{
+  "isPartial": true
+}
+
+
+### 15. UPDATE FILLUP - Update multiple fields
+PUT {{baseUrl}}/api/fillups/{{f150Fillup1}}
+Content-Type: application/json
+
+{
+  "date": "2024-03-03T09:00:00Z",
+  "fuelVolume": 23.0,
+  "pricePerUnit": 3.80,
+  "totalCost": 87.40,
+  "isPartial": false,
+  "isMissed": false
+}
+
+
+### 16. DELETE FILLUP - Delete Tesla fillup
+### WARNING: This will permanently delete the fillup!
+# DELETE {{baseUrl}}/api/fillups/{{teslaFillup1}}
+
+### ERROR CASES
+
+### 17. CREATE FILLUP - Missing required fields (should return 400)
+POST {{baseUrl}}/api/fillups?carId={{teslaCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-10T10:00:00Z",
+  "odometer": 11000
+}
+
+
+### 18. CREATE FILLUP - Negative fuel amount (should return 400)
+POST {{baseUrl}}/api/fillups?carId={{teslaCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-10T10:00:00Z",
+  "odometer": 11000,
+  "fuelVolume": -5.0,
+  "pricePerUnit": 4.50,
+  "totalCost": -22.50
+}
+
+
+### 19. CREATE FILLUP - Odometer lower than previous (should return 400)
+POST {{baseUrl}}/api/fillups?carId={{teslaCarId}}
+Content-Type: application/json
+
+{
+  "date": "2024-06-10T10:00:00Z",
+  "odometer": 1000,
+  "fuelVolume": 12.0,
+  "pricePerUnit": 4.50,
+  "totalCost": 54.00,
+  "isPartial": false,
+  "isMissed": false
+}
+
+
+### 20. CREATE FILLUP - Non-existent car (should return 404)
+POST {{baseUrl}}/api/fillups?carId=00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "date": "2024-06-10T10:00:00Z",
+  "odometer": 5000,
+  "fuelVolume": 12.0,
+  "pricePerUnit": 4.50,
+  "totalCost": 54.00,
+  "isPartial": false,
+  "isMissed": false
+}
+
+
+### 21. GET FILLUP - Non-existent fillup ID (should return 404)
+GET {{baseUrl}}/api/fillups/00000000-0000-0000-0000-000000000000
+
+### 22. UPDATE FILLUP - Non-existent fillup ID (should return 404)
+PUT {{baseUrl}}/api/fillups/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "fuelVolume": 15.0
+}
+
+
+### 23. DELETE FILLUP - Non-existent fillup ID (should return 404)
+# DELETE {{baseUrl}}/api/fillups/00000000-0000-0000-0000-000000000000

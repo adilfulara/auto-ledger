@@ -1,0 +1,147 @@
+### Cars API Test Requests
+### Use IntelliJ HTTP Client to run these requests against your local development server
+### Start the server with: make dev-start
+
+
+### VARIABLES
+
+@baseUrl = http://localhost:9090
+@aliceUserId = a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+@bobUserId = b1ffcd88-8b1a-5df7-aa5c-5aa8ac271b22
+@teslaCarId = c2ddef77-7a2b-6ef8-99fc-499b9d482c33
+@civicCarId = d3eeff66-6b3c-7df9-88eb-388a8c593d44
+@f150CarId = e4fff055-5c4d-8ef0-77da-277b7d604e55
+
+### 1. LIST CARS - Get all cars for Alice
+GET {{baseUrl}}/api/cars?userId={{aliceUserId}}
+
+### 2. LIST CARS - Get all cars for Bob
+GET {{baseUrl}}/api/cars?userId={{bobUserId}}
+
+### 3. GET CAR BY ID - Tesla Model 3 (Alice)
+GET {{baseUrl}}/api/cars/{{teslaCarId}}
+
+### 4. GET CAR BY ID - Honda Civic (Alice)
+GET {{baseUrl}}/api/cars/{{civicCarId}}
+
+### 5. GET CAR BY ID - Ford F-150 (Bob)
+GET {{baseUrl}}/api/cars/{{f150CarId}}
+
+### 6. GET CAR STATS - Tesla Model 3
+### Should show ~35 MPG average, 12 fillups
+GET {{baseUrl}}/api/cars/{{teslaCarId}}/stats
+
+### 7. GET CAR STATS - Honda Civic
+### Should show ~14.6 km/L average, 12 fillups
+GET {{baseUrl}}/api/cars/{{civicCarId}}/stats
+
+### 8. GET CAR STATS - Ford F-150
+### Should show ~18 MPG average, 12 fillups
+GET {{baseUrl}}/api/cars/{{f150CarId}}/stats
+
+### 9. CREATE CAR - New car for Alice (Imperial units)
+POST {{baseUrl}}/api/cars?userId={{aliceUserId}}
+Content-Type: application/json
+
+{
+  "make": "Chevrolet",
+  "model": "Bolt EV",
+  "year": 2023,
+  "vin": "1G1FW6S00L4123456",
+  "name": "Electric Commuter",
+  "fuelUnit": "GALLONS",
+  "distanceUnit": "MILES"
+}
+
+
+### 10. CREATE CAR - New car for Bob (Metric units)
+POST {{baseUrl}}/api/cars?userId={{bobUserId}}
+Content-Type: application/json
+
+{
+  "make": "Toyota",
+  "model": "Corolla",
+  "year": 2022,
+  "vin": "2T1BURHE0NC123456",
+  "name": "Daily Driver",
+  "fuelUnit": "LITERS",
+  "distanceUnit": "KILOMETERS"
+}
+
+
+### 11. CREATE CAR - Minimal required fields
+
+POST {{baseUrl}}/api/cars?userId={{aliceUserId}}
+Content-Type: application/json
+
+{
+  "make": "Mazda",
+  "model": "CX-5",
+  "year": 2021,
+  "fuelUnit": "GALLONS",
+  "distanceUnit": "MILES"
+}
+
+
+### 12. UPDATE CAR - Update Tesla name and VIN
+
+PUT {{baseUrl}}/api/cars/{{teslaCarId}}
+Content-Type: application/json
+
+{
+  "name": "My Updated Tesla"
+}
+
+
+### 13. UPDATE CAR - Update multiple fields for Civic
+
+PUT {{baseUrl}}/api/cars/{{civicCarId}}
+Content-Type: application/json
+
+{
+  "make": "Honda",
+  "model": "Civic Sport",
+  "year": 2020,
+  "name": "Updated Family Car"
+}
+
+
+### 14. DELETE CAR - Delete F-150 (Bob's truck)
+### WARNING: This will delete the car and all its fillups!
+# DELETE {{baseUrl}}/api/cars/{{f150CarId}}
+### ERROR CASES
+
+
+### 15. CREATE CAR - Missing required fields (should return 400)
+POST {{baseUrl}}/api/cars?userId={{aliceUserId}}
+Content-Type: application/json
+
+{
+  "model": "Missing Make"
+}
+
+### 16. CREATE CAR - Invalid year (should return 400)
+POST {{baseUrl}}/api/cars?userId={{aliceUserId}}
+Content-Type: application/json
+
+{
+  "make": "Tesla",
+  "model": "Model S",
+  "year": 1800,
+  "fuelUnit": "GALLONS",
+  "distanceUnit": "MILES"
+}
+
+### 17. GET CAR - Non-existent car ID (should return 404)
+GET {{baseUrl}}/api/cars/00000000-0000-0000-0000-000000000000
+
+### 18. UPDATE CAR - Non-existent car ID (should return 404)
+PUT {{baseUrl}}/api/cars/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "name": "This should fail"
+}
+
+### 19. DELETE CAR - Non-existent car ID (should return 404)
+DELETE {{baseUrl}}/api/cars/00000000-0000-0000-0000-000000000000

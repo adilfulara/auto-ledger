@@ -1,4 +1,4 @@
-.PHONY: help build-backend build-frontend test-backend test-frontend run-backend run-frontend dev check-coverage deploy-prod
+.PHONY: help build-backend build-frontend test-backend test-frontend dev-db-start dev-db-stop dev-start dev-stop check-coverage
 
 # Default target - show help
 .DEFAULT_GOAL := help
@@ -23,18 +23,28 @@ test-frontend: ## Run Frontend Unit Tests
 	cd frontend && npm run test
 
 # --- 🚀 LOCAL DEVELOPMENT ---
-run-backend: ## Run Backend locally in development mode
-	@echo "🚀 Starting Backend..."
-	cd backend && ./mvnw spring-boot:run
+dev-db-start: ## Start PostgreSQL with sample data
+	@echo "🐳 Starting PostgreSQL database..."
+	@docker-compose -f docker-compose.dev.yml up -d
+	@echo "⏳ Waiting for database to be ready..."
+	@until docker exec auto-ledger-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@echo "✅ PostgreSQL ready at localhost:5432"
 
-run-frontend: ## Run Frontend locally in development mode
-	@echo "🚀 Starting Frontend..."
-	cd frontend && npm run dev
+dev-db-stop: ## Stop PostgreSQL
+	@echo "🛑 Stopping PostgreSQL..."
+	@docker-compose -f docker-compose.dev.yml down
 
-dev: ## Start both backend and frontend (run in separate terminals)
-	@echo "💡 Tip: Run these commands in separate terminals:"
-	@echo "  Terminal 1: make run-backend"
-	@echo "  Terminal 2: make run-frontend"
+dev-start: dev-db-start ## Start DB + Backend with local profile
+	@echo "🚀 Starting Backend (local profile with sample data)..."
+	@echo "💡 Database: jdbc:postgresql://localhost:5432/autoledger_dev"
+	cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+
+dev-stop: ## Stop backend and database
+	@echo "🛑 Stopping Backend..."
+	@lsof -ti:9090 | xargs kill -9 2>/dev/null || echo "No backend process on port 9090"
+	@echo "🛑 Stopping PostgreSQL..."
+	@docker-compose -f docker-compose.dev.yml down
+	@echo "✅ Environment stopped"
 
 # --- 🛡️ GATES & OPS ---
 check-coverage: ## Run Tests & Verify 80% Coverage
@@ -42,6 +52,3 @@ check-coverage: ## Run Tests & Verify 80% Coverage
 	cd backend && ./mvnw verify
 	@echo "🔍 Checking Frontend Coverage..."
 	cd frontend && npm run test:coverage
-
-deploy-prod: ## Deploy to Production
-	fly deploy --config fly.prod.toml

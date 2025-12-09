@@ -1,0 +1,16 @@
+# Local development profile configuration
+# Activate with: SPRING_PROFILES_ACTIVE=local or --spring.profiles.active=local
+
+server:
+  port: 9090
+
+spring:
+  flyway:
+    # Include sample data migrations for local development
+    locations: classpath:db/migration,classpath:db/sample
+
+logging:
+  level:
+    root: INFO
+    me.adilfulara.autoledger: DEBUG
+    org.springframework.jdbc: DEBUG
