@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @DisplayName("CarController Integration Tests")
-class CarControllerIntegrationTest {
+class CarControllerIT {
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")

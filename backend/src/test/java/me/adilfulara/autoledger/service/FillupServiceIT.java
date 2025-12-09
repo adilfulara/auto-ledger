@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Testcontainers
 @DisplayName("FillupService Integration Tests")
-class FillupServiceIntegrationTest {
+class FillupServiceIT {
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")

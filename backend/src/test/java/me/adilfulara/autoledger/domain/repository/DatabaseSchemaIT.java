@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJdbcTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class DatabaseSchemaIntegrationTest {
+class DatabaseSchemaIT {
 
     @Container
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")
