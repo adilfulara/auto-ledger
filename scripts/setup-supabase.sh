@@ -7,7 +7,7 @@
 #   ./scripts/setup-supabase.sh production [--dry-run] [--force]
 #
 # Prerequisites:
-#   - Supabase CLI installed: npm install -g supabase
+#   - Supabase CLI installed: brew install supabase/tap/supabase
 #   - Logged in: supabase login
 #   - GitHub CLI installed: gh auth login
 #
@@ -86,7 +86,7 @@ check_prerequisites() {
 
   # Check Supabase CLI
   if ! command -v supabase &> /dev/null; then
-    log_error "Supabase CLI not found. Install: npm install -g supabase"
+    log_error "Supabase CLI not found. Install: brew install supabase/tap/supabase"
     exit 1
   fi
 

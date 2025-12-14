@@ -12,7 +12,7 @@ Automates the creation and configuration of Supabase PostgreSQL databases for st
 
 ```bash
 # Install Supabase CLI
-npm install -g supabase
+brew install supabase/tap/supabase
 
 # Login to Supabase (one-time, opens browser)
 supabase login
@@ -158,7 +158,7 @@ Enter existing database password for auto-ledger-staging: ********
 
 | Error | Solution |
 |-------|----------|
-| `Supabase CLI not found` | Run: `npm install -g supabase` |
+| `Supabase CLI not found` | Run: `brew install supabase/tap/supabase` |
 | `Not logged in to Supabase` | Run: `supabase login` |
 | `GitHub CLI not found` | Install from https://cli.github.com |
 | `jq not found` | Ubuntu: `sudo apt install jq`, macOS: `brew install jq` |
