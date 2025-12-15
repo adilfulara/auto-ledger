@@ -150,7 +150,7 @@ create_supabase_project() {
   if $DRY_RUN; then
     log_dry_run "Would create Supabase project: $project_name"
     log_dry_run "  Organization: $org_id"
-    log_dry_run "  Region: us-east-1"
+    log_dry_run "  Region: us-west-1"
     log_dry_run "  Plan: free"
     return 0
   fi
@@ -161,7 +161,7 @@ create_supabase_project() {
   if ! supabase projects create "$project_name" \
     --org-id "$org_id" \
     --db-password "$db_password" \
-    --region us-east-1 \
+    --region us-west-1 \
     --plan free; then
     log_error "Failed to create Supabase project"
     exit 1

@@ -114,7 +114,7 @@ $ ./scripts/setup-supabase.sh staging --dry-run
 
 [DRY RUN] Would create Supabase project: auto-ledger-staging
 [DRY RUN]   Organization: abc123def456
-[DRY RUN]   Region: us-east-1
+[DRY RUN]   Region: us-west-1
 [DRY RUN]   Plan: free
 [DRY RUN] Would set GitHub secrets:
 [DRY RUN]   STAGING_DATABASE_URL = jdbc:postgresql://...
@@ -235,7 +235,7 @@ $ ./scripts/cleanup-supabase.sh staging --dry-run
 Supabase Project:
   Name: auto-ledger-staging
   Ref: xyz789
-  Region: us-east-1
+  Region: us-west-1
   Host: db.xyz789.supabase.co
 
 GitHub Secrets:
