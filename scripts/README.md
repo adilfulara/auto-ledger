@@ -394,8 +394,8 @@ fly secrets set DATABASE_PASSWORD="your-db-password" -a auto-ledger-staging
 
 **2. Create Fly API Token for GitHub Actions**
 ```bash
-# Create deploy token
-fly tokens create deploy -n github-actions-staging
+# Create deploy token scoped to the app
+fly tokens create deploy -a auto-ledger-staging -n github-actions-staging
 
 # Store in GitHub secrets
 echo "YOUR_FLY_TOKEN" | gh secret set FLY_API_TOKEN
