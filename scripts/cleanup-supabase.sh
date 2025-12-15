@@ -129,17 +129,17 @@ check_prerequisites() {
 #######################################
 project_exists() {
   local project_name="$1"
-  supabase projects list --output json 2>/dev/null | jq -e ".[] | select(.name == \"$project_name\")" > /dev/null
+  supabase projects list --output json 2>/dev/null | jq -e ".[]? | select(.name == \"$project_name\")" > /dev/null 2>&1
 }
 
 get_project_ref() {
   local project_name="$1"
-  supabase projects list --output json 2>/dev/null | jq -r ".[] | select(.name == \"$project_name\") | .id"
+  supabase projects list --output json 2>/dev/null | jq -r ".[]? | select(.name == \"$project_name\") | .id"
 }
 
 get_project_region() {
   local project_name="$1"
-  supabase projects list --output json 2>/dev/null | jq -r ".[] | select(.name == \"$project_name\") | .region"
+  supabase projects list --output json 2>/dev/null | jq -r ".[]? | select(.name == \"$project_name\") | .region"
 }
 
 delete_supabase_project() {
