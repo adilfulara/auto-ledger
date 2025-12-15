@@ -336,3 +336,144 @@ GitHub Secrets:
 
 - Issue #31: Setup Supabase database integration for staging
 - Issue #32: Setup Fly.io infrastructure
+
+## Fly.io Application Setup
+
+**Script:** `setup-flyio.sh`
+
+Automates the creation and configuration of Fly.io applications for staging and production environments.
+
+### Prerequisites
+
+```bash
+# Install Fly CLI
+brew install flyctl
+
+# Login to Fly.io (one-time, opens browser)
+fly auth login
+
+# Verify login
+fly auth whoami
+```
+
+### Usage
+
+```bash
+# Preview what will happen (safe, no changes)
+./scripts/setup-flyio.sh staging --dry-run
+
+# Create staging app
+./scripts/setup-flyio.sh staging
+
+# Create production app
+./scripts/setup-flyio.sh production
+
+# Force recreate/reconfigure
+./scripts/setup-flyio.sh staging --force
+```
+
+### What It Does
+
+1. ✅ Validates prerequisites (Fly CLI, authentication)
+2. ✅ Checks if Fly.io app already exists
+3. ✅ Creates app if needed (with confirmation)
+4. ✅ Provides instructions for setting secrets
+5. ✅ Provides instructions for creating API tokens
+
+### Manual Steps Required
+
+After running the script, you need to:
+
+**1. Set Fly.io Secrets**
+```bash
+# Get database credentials from Supabase dashboard
+fly secrets set DATABASE_URL="jdbc:postgresql://db.YOUR-REF.supabase.co:5432/postgres" -a auto-ledger-staging
+fly secrets set DATABASE_USER="postgres" -a auto-ledger-staging
+fly secrets set DATABASE_PASSWORD="your-db-password" -a auto-ledger-staging
+```
+
+**2. Create Fly API Token for GitHub Actions**
+```bash
+# Create deploy token
+fly tokens create deploy -n github-actions-staging
+
+# Store in GitHub secrets
+echo "YOUR_FLY_TOKEN" | gh secret set FLY_API_TOKEN
+```
+
+### Examples
+
+#### First-time setup (staging)
+
+```bash
+$ ./scripts/setup-flyio.sh staging
+
+═══════════════════════════════════════════════════════
+  Auto Ledger - Fly.io Application Setup
+  Environment: staging
+═══════════════════════════════════════════════════════
+
+ℹ Checking prerequisites...
+✓ All prerequisites met
+ℹ App name: auto-ledger-staging
+ℹ Region: lax
+ℹ Config: fly.staging.toml
+ℹ App 'auto-ledger-staging' does not exist. Will create new app.
+
+Create new Fly.io app 'auto-ledger-staging'? (yes/no): yes
+ℹ Creating Fly.io app: auto-ledger-staging...
+✓ App created successfully
+
+Next steps:
+  1. Set Fly.io secrets (see instructions above)
+  2. Create Fly API token (see instructions above)
+  3. Test deployment: flyctl deploy --config fly.staging.toml
+  4. Verify: https://auto-ledger-staging.fly.dev/actuator/health
+```
+
+#### App already exists
+
+```bash
+$ ./scripts/setup-flyio.sh staging
+
+⚠ Fly.io app 'auto-ledger-staging' already exists!
+
+App details:
+  Name: auto-ledger-staging
+  Hostname: auto-ledger-staging.fly.dev
+
+✗ App already exists. Use --force to reconfigure secrets anyway
+```
+
+## Fly.io Application Cleanup
+
+**Script:** `cleanup-flyio.sh`
+
+Safely deletes Fly.io applications.
+
+### Usage
+
+```bash
+# Preview what will be deleted (safe)
+./scripts/cleanup-flyio.sh staging --dry-run
+
+# Delete staging app
+./scripts/cleanup-flyio.sh staging
+
+# Delete production app (requires --force)
+./scripts/cleanup-flyio.sh production --force
+```
+
+### Safety Features
+
+| Feature | Purpose |
+|---------|---------|
+| **Production protection** | Requires `--force` flag to delete production |
+| **Explicit confirmation** | Must type "delete {environment}" to proceed |
+| **`--dry-run` mode** | Preview deletions without making changes |
+| **Idempotent** | Safe to run even if app already deleted |
+
+### Related Issues
+
+- Issue #32: Setup Fly.io infrastructure for staging deployment
+- Issue #33: CI/CD pipeline for staging

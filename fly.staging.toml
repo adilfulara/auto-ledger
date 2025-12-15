@@ -1,0 +1,27 @@
+app = "auto-ledger-staging"
+primary_region = "lax"  # Los Angeles - local region for minimal latency
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  SPRING_PROFILES_ACTIVE = "staging"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0  # Scale to zero when idle
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/actuator/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
