@@ -10,7 +10,7 @@ primary_region = "lax"  # Los Angeles - local region for minimal latency
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = "stop"
   auto_start_machines = true
   min_machines_running = 0  # Scale to zero when idle
 
