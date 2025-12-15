@@ -15,7 +15,7 @@ primary_region = "lax"  # Los Angeles - local region for minimal latency
   min_machines_running = 0  # Scale to zero when idle
 
   [[http_service.checks]]
-    grace_period = "10s"
+    grace_period = "60s"
     interval = "30s"
     method = "GET"
     timeout = "5s"
