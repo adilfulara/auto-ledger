@@ -2,23 +2,24 @@ package me.adilfulara.autoledger;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
  * Base class for integration tests using PostgreSQL via Testcontainers.
  * Automatically configures PostgreSQL with app schema settings.
  * All integration tests should extend this class.
  */
-@Testcontainers
 public abstract class BaseIntegrationTest {
 
-    @Container
-    protected static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")
-            .withDatabaseName("autoledger_test")
-            .withUsername("test")
-            .withPassword("test");
+    protected static final PostgreSQLContainer<?> postgres;
+
+    static {
+        postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+                .withDatabaseName("autoledger_test")
+                .withUsername("test")
+                .withPassword("test");
+        postgres.start();
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

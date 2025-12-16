@@ -1,5 +1,6 @@
 package me.adilfulara.autoledger.api.controller;
 
+import me.adilfulara.autoledger.BaseIntegrationTest;
 import me.adilfulara.autoledger.api.dto.*;
 import me.adilfulara.autoledger.domain.model.*;
 import me.adilfulara.autoledger.domain.repository.CarRepository;
@@ -17,11 +18,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -37,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("CarController Integration Tests")
-class CarControllerIT extends me.adilfulara.autoledger.BaseIntegrationTest {
+class CarControllerIT extends BaseIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
