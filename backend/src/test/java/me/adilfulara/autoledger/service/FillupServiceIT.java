@@ -29,24 +29,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Tests the full flow: Service → Repository → Database → Result.
  */
 @SpringBootTest
-@Testcontainers
 @DisplayName("FillupService Integration Tests")
-class FillupServiceIT {
-
-    @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")
-            .withDatabaseName("autoledger_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.flyway.enabled", () -> "true");
-    }
+class FillupServiceIT extends me.adilfulara.autoledger.BaseIntegrationTest {
 
     @Autowired
     private FillupService fillupService;
