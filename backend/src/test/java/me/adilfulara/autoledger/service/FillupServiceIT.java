@@ -1,6 +1,6 @@
 package me.adilfulara.autoledger.service;
 
-import me.adilfulara.autoledger.BaseIntegrationTest;
+import me.adilfulara.autoledger.PostgreSQLTestContainer;
 import me.adilfulara.autoledger.domain.model.*;
 import me.adilfulara.autoledger.domain.repository.CarRepository;
 import me.adilfulara.autoledger.domain.repository.FillupRepository;
@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,7 +28,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest
 @DisplayName("FillupService Integration Tests")
-class FillupServiceIT extends BaseIntegrationTest {
+class FillupServiceIT {
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        PostgreSQLTestContainer.configureDataSource(registry);
+    }
 
     @Autowired
     private FillupService fillupService;

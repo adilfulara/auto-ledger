@@ -1,12 +1,14 @@
 package me.adilfulara.autoledger.domain.repository;
 
-import me.adilfulara.autoledger.BaseIntegrationTest;
+import me.adilfulara.autoledger.PostgreSQLTestContainer;
 import me.adilfulara.autoledger.domain.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -21,7 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DataJdbcTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class DatabaseSchemaIT extends BaseIntegrationTest {
+class DatabaseSchemaIT {
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        PostgreSQLTestContainer.configureDataSource(registry);
+    }
 
     @Autowired
     private UserRepository userRepository;
