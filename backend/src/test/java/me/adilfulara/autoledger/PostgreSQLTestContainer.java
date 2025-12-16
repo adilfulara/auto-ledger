@@ -13,10 +13,10 @@ public final class PostgreSQLTestContainer {
     private static final DockerImageName POSTGRES_IMAGE = DockerImageName.parse("postgres:16-alpine")
             .asCompatibleSubstituteFor("postgres");
 
-    private static final PostgreSQLContainer<?> INSTANCE;
+    private static final PostgreSQLContainer INSTANCE;
 
     static {
-        INSTANCE = new PostgreSQLContainer<>(POSTGRES_IMAGE)
+        INSTANCE = new PostgreSQLContainer(POSTGRES_IMAGE)
                 .withDatabaseName("autoledger_test")
                 .withUsername("test")
                 .withPassword("test");
@@ -27,7 +27,7 @@ public final class PostgreSQLTestContainer {
         // Prevent instantiation
     }
 
-    public static PostgreSQLContainer<?> getInstance() {
+    public static PostgreSQLContainer getInstance() {
         return INSTANCE;
     }
 
