@@ -37,4 +37,4 @@ HEALTHCHECK --interval=30s --timeout=3s \
 USER spring:spring
 
 # Tini handles signal propagation (SIGTERM) for graceful shutdown
-ENTRYPOINT ["/sbin/tini", "--", "java", "-jar", "app.jar"]
+ENTRYPOINT ["/sbin/tini", "-s", "--", "java", "-jar", "app.jar"]
