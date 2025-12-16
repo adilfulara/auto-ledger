@@ -5,9 +5,17 @@ server:
   port: 9090
 
 spring:
+  datasource:
+    hikari:
+      # All tables are in 'app' schema
+      schema: app
+
   flyway:
     # Include sample data migrations for local development
     locations: classpath:db/migration,classpath:db/sample
+    # Flyway manages tables in 'app' schema
+    schemas: app
+    default-schema: app
 
 logging:
   level:
