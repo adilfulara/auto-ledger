@@ -1,7 +1,7 @@
 package me.adilfulara.autoledger;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -16,10 +16,11 @@ public final class PostgreSQLTestContainer {
     private static final PostgreSQLContainer INSTANCE;
 
     static {
-        INSTANCE = new PostgreSQLContainer(POSTGRES_IMAGE)
-                .withDatabaseName("autoledger_test")
-                .withUsername("test")
-                .withPassword("test");
+        PostgreSQLContainer container = new PostgreSQLContainer(POSTGRES_IMAGE);
+        container.withDatabaseName("autoledger_test");
+        container.withUsername("test");
+        container.withPassword("test");
+        INSTANCE = container;
         INSTANCE.start();
     }
 
