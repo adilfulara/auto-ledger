@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Integration tests for FillupService using real PostgreSQL via Testcontainers.
  * Tests the full flow: Service → Repository → Database → Result.
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DisplayName("FillupService Integration Tests")
 class FillupServiceIT {
 
