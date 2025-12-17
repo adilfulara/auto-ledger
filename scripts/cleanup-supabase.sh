@@ -152,7 +152,8 @@ delete_supabase_project() {
 
   log_info "Deleting Supabase project: $project_ref..."
 
-  if ! supabase projects delete "$project_ref"; then
+  # Pipe 'y' to confirm interactive deletion prompt
+  if ! echo "y" | supabase projects delete "$project_ref"; then
     log_error "Failed to delete Supabase project"
     log_warning "Project may have already been deleted or requires manual deletion"
     log_info "Visit: https://supabase.com/dashboard/project/$project_ref/settings/general"
@@ -210,19 +211,19 @@ delete_github_secrets() {
   log_info "Deleting GitHub secrets..."
 
   if github_secret_exists "$url_secret"; then
-    gh secret delete "$url_secret" --confirm
+    gh secret remove "$url_secret"
     log_success "Deleted $url_secret"
     secrets_deleted=$((secrets_deleted + 1))
   fi
 
   if github_secret_exists "$user_secret"; then
-    gh secret delete "$user_secret" --confirm
+    gh secret remove "$user_secret"
     log_success "Deleted $user_secret"
     secrets_deleted=$((secrets_deleted + 1))
   fi
 
   if github_secret_exists "$pass_secret"; then
-    gh secret delete "$pass_secret" --confirm
+    gh secret remove "$pass_secret"
     log_success "Deleted $pass_secret"
     secrets_deleted=$((secrets_deleted + 1))
   fi
