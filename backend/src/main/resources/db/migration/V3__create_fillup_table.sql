@@ -1,5 +1,5 @@
--- Create fillups table for tracking fuel purchases
-CREATE TABLE fillups (
+-- Create fillups table for tracking fuel purchases in app schema
+CREATE TABLE app.fillups (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     car_id UUID NOT NULL,
     date TIMESTAMP NOT NULL,
@@ -14,25 +14,25 @@ CREATE TABLE fillups (
 
     -- Foreign key to cars table
     CONSTRAINT fk_fillups_car_id FOREIGN KEY (car_id)
-        REFERENCES cars(id)
+        REFERENCES app.cars(id)
         ON DELETE CASCADE
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_fillups_car_id ON fillups(car_id);
-CREATE INDEX idx_fillups_car_date ON fillups(car_id, date DESC);
-CREATE INDEX idx_fillups_date ON fillups(date);
+CREATE INDEX idx_fillups_car_id ON app.fillups(car_id);
+CREATE INDEX idx_fillups_car_date ON app.fillups(car_id, date DESC);
+CREATE INDEX idx_fillups_date ON app.fillups(date);
 
 -- Constraint to ensure odometer values increase for each car
 -- This will be enforced at the application layer for better error messages
--- CREATE UNIQUE INDEX idx_fillups_car_odometer ON fillups(car_id, odometer);
+-- CREATE UNIQUE INDEX idx_fillups_car_odometer ON app.fillups(car_id, odometer);
 
 -- Add comments for documentation
-COMMENT ON TABLE fillups IS 'Fuel fill-up records for MPG calculation';
-COMMENT ON COLUMN fillups.car_id IS 'References cars.id';
-COMMENT ON COLUMN fillups.odometer IS 'Total vehicle mileage/kilometers at fill-up';
-COMMENT ON COLUMN fillups.fuel_volume IS 'Amount of fuel added (units from parent car)';
-COMMENT ON COLUMN fillups.price_per_unit IS 'Price per unit of fuel';
-COMMENT ON COLUMN fillups.total_cost IS 'Total cost of fill-up (currency)';
-COMMENT ON COLUMN fillups.is_partial IS 'TRUE if tank was not filled to top (skip MPG calc)';
-COMMENT ON COLUMN fillups.is_missed IS 'TRUE if user missed logging previous fill-up (break MPG chain)';
+COMMENT ON TABLE app.fillups IS 'Fuel fill-up records for MPG calculation';
+COMMENT ON COLUMN app.fillups.car_id IS 'References app.cars.id';
+COMMENT ON COLUMN app.fillups.odometer IS 'Total vehicle mileage/kilometers at fill-up';
+COMMENT ON COLUMN app.fillups.fuel_volume IS 'Amount of fuel added (units from parent car)';
+COMMENT ON COLUMN app.fillups.price_per_unit IS 'Price per unit of fuel';
+COMMENT ON COLUMN app.fillups.total_cost IS 'Total cost of fill-up (currency)';
+COMMENT ON COLUMN app.fillups.is_partial IS 'TRUE if tank was not filled to top (skip MPG calc)';
+COMMENT ON COLUMN app.fillups.is_missed IS 'TRUE if user missed logging previous fill-up (break MPG chain)';

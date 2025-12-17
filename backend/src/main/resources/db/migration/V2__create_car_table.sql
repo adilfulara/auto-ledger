@@ -1,5 +1,5 @@
--- Create cars table
-CREATE TABLE cars (
+-- Create cars table in app schema
+CREATE TABLE app.cars (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     make VARCHAR(100) NOT NULL,
@@ -14,18 +14,18 @@ CREATE TABLE cars (
 
     -- Foreign key to users table
     CONSTRAINT fk_cars_user_id FOREIGN KEY (user_id)
-        REFERENCES users(id)
+        REFERENCES app.users(id)
         ON DELETE CASCADE
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_cars_user_id ON cars(user_id);
-CREATE INDEX idx_cars_vin ON cars(vin) WHERE vin IS NOT NULL;
+CREATE INDEX idx_cars_user_id ON app.cars(user_id);
+CREATE INDEX idx_cars_vin ON app.cars(vin) WHERE vin IS NOT NULL;
 
 -- Add comments for documentation
-COMMENT ON TABLE cars IS 'User vehicles for mileage tracking';
-COMMENT ON COLUMN cars.user_id IS 'References users.id (internal UUID)';
-COMMENT ON COLUMN cars.vin IS 'Vehicle Identification Number (17 characters, optional)';
-COMMENT ON COLUMN cars.name IS 'User-friendly name for the car (e.g., "My Tesla", "Work Truck")';
-COMMENT ON COLUMN cars.fuel_unit IS 'Unit for fuel volume (GALLONS or LITERS), immutable after creation';
-COMMENT ON COLUMN cars.distance_unit IS 'Unit for distance (MILES or KILOMETERS), immutable after creation';
+COMMENT ON TABLE app.cars IS 'User vehicles for mileage tracking';
+COMMENT ON COLUMN app.cars.user_id IS 'References app.users.id (internal UUID)';
+COMMENT ON COLUMN app.cars.vin IS 'Vehicle Identification Number (17 characters, optional)';
+COMMENT ON COLUMN app.cars.name IS 'User-friendly name for the car (e.g., "My Tesla", "Work Truck")';
+COMMENT ON COLUMN app.cars.fuel_unit IS 'Unit for fuel volume (GALLONS or LITERS), immutable after creation';
+COMMENT ON COLUMN app.cars.distance_unit IS 'Unit for distance (MILES or KILOMETERS), immutable after creation';

@@ -7,6 +7,10 @@ spring:
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # Set default schema for Spring Data JDBC queries
+      # All tables are in 'app' schema (not 'public')
+      schema: app
 
   # Flyway database migration configuration
   flyway:
@@ -14,6 +18,9 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
+    # Flyway manages tables in 'app' schema
+    schemas: app
+    default-schema: app
 
 # Actuator endpoints for health checks
 management:

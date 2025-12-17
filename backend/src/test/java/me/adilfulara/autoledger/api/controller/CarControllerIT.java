@@ -1,5 +1,6 @@
 package me.adilfulara.autoledger.api.controller;
 
+import me.adilfulara.autoledger.PostgreSQLTestContainer;
 import me.adilfulara.autoledger.api.dto.*;
 import me.adilfulara.autoledger.domain.model.*;
 import me.adilfulara.autoledger.domain.repository.CarRepository;
@@ -19,9 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -36,23 +34,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests the full HTTP flow: Request → Controller → Service → Repository → Database → Response.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @DisplayName("CarController Integration Tests")
 class CarControllerIT {
 
-    @Container
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine")
-            .withDatabaseName("autoledger_test")
-            .withUsername("test")
-            .withPassword("test");
-
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.flyway.enabled", () -> "true");
+        PostgreSQLTestContainer.configureDataSource(registry);
     }
 
     @Autowired
