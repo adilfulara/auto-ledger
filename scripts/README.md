@@ -523,3 +523,83 @@ When Fly.io deploys with `--registry-auth`, it can authenticate and pull the Doc
 ### Related Issues
 
 - Issue #33: CI/CD pipeline for staging deployment
+
+## Staging Deployment & Rollback
+
+The staging environment supports multiple deployment triggers:
+
+### Deployment Triggers
+
+| Trigger | Image Tag | Use Case |
+|---------|-----------|----------|
+| Push to feature branch (with open PR) | `pr-<number>-<sha>` | Test PR before merge |
+| Push to `main` | `main-<sha>` | Post-merge verification |
+| Manual dispatch | User-specified | Rollback, redeploy |
+
+### Deploy Feature Branch
+
+```bash
+git checkout -b feat/issue-99-new-feature
+git push origin feat/issue-99-new-feature
+gh pr create  # Creates PR #45
+
+# → GitHub Actions triggered
+# → CI runs tests
+# → If CI passes, deploys to staging
+# → Image tagged: pr-45-abc1234
+# → Preview at: https://auto-ledger-staging.fly.dev
+```
+
+When PR is merged and branch is deleted:
+- Image is automatically cleaned up from ghcr.io
+- Triggered by branch delete webhook
+- Saves storage costs
+
+### Deploy Main After Merge
+
+```bash
+gh pr merge 99
+
+# → CI workflow runs
+# → If tests pass, Deploy workflow triggered
+# → Image tagged: staging + sha-<commit>
+# → Preview at: https://auto-ledger-staging.fly.dev
+```
+
+### Rollback to Previous Version
+
+To roll back to a previous commit:
+
+1. Find the image tag in [GitHub Packages](https://github.com/adilfulara/auto-ledger/pkgs/container/auto-ledger)
+   - Look for `sha-abc1234` tags for commit-specific images
+   - Or `branch-<name>` for feature branches
+
+2. Go to **Actions** → **Deploy Staging** workflow
+
+3. Click **Run workflow**
+
+4. Enter the image tag (e.g., `sha-abc1234`) in the **image_tag** field
+
+5. Click **Run workflow**
+
+6. Verify at https://auto-ledger-staging.fly.dev/actuator/health
+
+### Image Retention Policy
+
+- All images are retained in ghcr.io for historical access
+- Use `sha-<commit>` tags to deploy any historical version
+- Cleanup images older than 30 days to manage storage costs:
+  ```bash
+  # Manual cleanup (when needed)
+  gh api repos/adilfulara/auto-ledger/packages/container/auto-ledger/versions \
+    --paginate -q '.[] | select(.updated_at < now - 30 * 24 * 3600 | @uri) | .id'
+  ```
+
+### Troubleshooting Deployments
+
+| Issue | Solution |
+|-------|----------|
+| Deploy fails - "image not found" | Check GitHub Packages - image may not have built yet |
+| Deploy fails - "registry auth failed" | Verify `GH_PAT_PACKAGES` secret is valid and not expired |
+| Deploy succeeds but app offline | Wait 30-60 seconds for Fly.io machine to start (auto-scale from zero) |
+| Health check fails | Check logs: `fly logs -a auto-ledger-staging` |
