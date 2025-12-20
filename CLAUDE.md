@@ -19,6 +19,21 @@ This project uses a **TDD + GitHub Issues workflow**:
 
 **CRITICAL: NEVER commit directly to `main` branch.** Always use feature branches and PRs. The repository is configured for squash and merge to maintain a clean history.
 
+### Branch Naming Convention
+
+- **Feature**: `feat/issue-{number}-description` (e.g., `feat/issue-33-staging-cicd`)
+- **Bug fix**: `fix/issue-{number}-description` (e.g., `fix/issue-48-use-fly-registry`)
+- **Documentation**: `docs/issue-{number}-description` (e.g., `docs/issue-50-update-deployment-docs`)
+
+### Workflow Applies to ALL Changes
+
+Documentation updates, configuration changes, and code changes ALL require:
+1. GitHub Issue
+2. Feature branch
+3. Pull Request
+
+No exceptions - even for "quick documentation fixes".
+
 ## Local Development Environment
 
 **Java Version Management:**
