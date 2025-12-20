@@ -301,8 +301,11 @@ main() {
     echo "Next steps:"
     echo "  1. Set Fly.io secrets (see instructions above)"
     echo "  2. Create Fly API token (see instructions above)"
-    echo "  3. Test deployment: flyctl deploy --config $config_file"
-    echo "  4. Verify: https://${app_name}.fly.dev/actuator/health"
+    echo "  3. Create GitHub PAT for container registry access:"
+    echo "     https://github.com/settings/tokens/new?scopes=read:packages"
+    echo "     Then: gh secret set GH_PAT_PACKAGES --body 'your-token'"
+    echo "  4. Test deployment: flyctl deploy --config $config_file"
+    echo "  5. Verify: https://${app_name}.fly.dev/actuator/health"
     echo ""
   fi
 
