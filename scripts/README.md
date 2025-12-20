@@ -478,51 +478,47 @@ Safely deletes Fly.io applications.
 - Issue #32: Setup Fly.io infrastructure for staging deployment
 - Issue #33: CI/CD pipeline for staging
 
-## GitHub Container Registry Setup
+## Docker Registry Setup (Fly.io)
 
-**Why:** When deploying Docker images from GitHub Actions to Fly.io, you need registry credentials so Fly.io can pull the image from `ghcr.io`.
+The project uses **Fly's container registry** (`registry.fly.io`) for Docker images:
 
-### Create GitHub PAT for ghcr.io Access
+### Why Fly Registry?
 
-A Personal Access Token (PAT) with `read:packages` scope allows Fly.io to authenticate with GitHub Container Registry.
-
-1. Go to: https://github.com/settings/tokens/new?scopes=read:packages
-2. **Name:** `auto-ledger-ghcr-readonly`
-3. **Expiration:** 90 days (recommended) or no expiration
-4. **Scope:** Select `read:packages` ✓
-5. **Generate:** Click "Generate token" and copy the value
-
-### Store as GitHub Secret
-
-```bash
-# Via CLI (recommended)
-gh secret set GH_PAT_PACKAGES --body "ghp_your_token_here"
-
-# Or via GitHub UI
-# Settings → Secrets and variables → Actions → New repository secret
-# Name: GH_PAT_PACKAGES
-# Value: (paste token)
-```
+- **No extra authentication**: Fly.io can pull images from its own registry without credentials
+- **Simpler workflow**: No need for GitHub PAT or `--registry-auth` flags
+- **Standard pattern**: Recommended approach in Fly.io documentation
+- **Cost**: Included in Fly.io pricing (no GitHub Packages costs)
 
 ### How It Works
 
-The GitHub Actions workflow uses this secret to tell Fly.io:
-- Username: your GitHub username
-- Password: your PAT token
-- Registry: ghcr.io
+GitHub Actions workflow:
+1. Builds Docker image from `./backend`
+2. Logs into `registry.fly.io` using `FLY_API_TOKEN`
+3. Pushes image with semantic tag (`main-<sha>` or `pr-<number>-<sha>`)
+4. Deploys using `flyctl deploy --image registry.fly.io/auto-ledger-staging:<tag>`
 
-When Fly.io deploys with `--registry-auth`, it can authenticate and pull the Docker image.
+### Required Secret
 
-### Token Management
+Only **one secret** is needed:
 
-- **Expiration:** Token revoked after expiration date (set reminder to rotate)
-- **Scope:** Limited to `read:packages` only (least privilege)
-- **Visibility:** Only used during GitHub Actions workflow (never exposed in logs)
-- **Revocation:** If compromised, revoke at https://github.com/settings/tokens
+| Secret | Scope | Where to Get |
+|--------|-------|--------------|
+| `FLY_API_TOKEN` | Fly.io API access | `flyctl auth token` |
 
-### Related Issues
+```bash
+# Get your Fly.io token
+flyctl auth token
 
-- Issue #33: CI/CD pipeline for staging deployment
+# Store as GitHub secret
+gh secret set FLY_API_TOKEN --body "your-fly-token"
+```
+
+### Migration from ghcr.io
+
+Previously used GitHub Container Registry (ghcr.io) - migrated to Fly registry in PR #49:
+- ✅ Removed dependency on `GH_PAT_PACKAGES` secret
+- ✅ Simplified authentication flow
+- ✅ Eliminated invalid `--registry-auth` flag error
 
 ## Staging Deployment & Rollback
 
@@ -566,34 +562,65 @@ gh pr merge 99
 # → Preview at: https://auto-ledger-staging.fly.dev
 ```
 
+### Understanding Fly.io Versions vs Image Tags
+
+**Important**: Fly.io shows auto-incrementing version numbers (v1, v2, v3...) in the UI, but these are NOT the same as Docker image tags.
+
+- **Fly version** (v11): Deployment counter for history tracking
+- **Image tag** (main-442b9a8, pr-49-df3453f): Semantic tags for rollback
+
+**For rollback, you need the IMAGE TAG from the Docker image column.**
+
 ### Rollback to Previous Version
 
-To roll back to a previous commit:
+**Step 1: List available images**
 
-1. Find the image tag in [GitHub Packages](https://github.com/adilfulara/auto-ledger/pkgs/container/auto-ledger)
-   - Look for `sha-abc1234` tags for commit-specific images
-   - Or `branch-<name>` for feature branches
+```bash
+flyctl releases --image -a auto-ledger-staging
 
-2. Go to **Actions** → **Deploy Staging** workflow
+# Output:
+# VERSION  STATUS    DOCKER IMAGE
+# v11      complete  registry.fly.io/auto-ledger-staging:main-442b9a8
+# v10      complete  registry.fly.io/auto-ledger-staging:pr-49-df3453f
+```
 
-3. Click **Run workflow**
+**Step 2: Identify the image tag** from the rightmost column
+(e.g., `main-442b9a8` or `pr-49-df3453f`)
 
-4. Enter the image tag (e.g., `sha-abc1234`) in the **image_tag** field
+**Step 3: Trigger manual deployment**
 
-5. Click **Run workflow**
+```bash
+# Via GitHub UI:
+# 1. Go to: https://github.com/adilfulara/auto-ledger/actions/workflows/deploy-staging.yml
+# 2. Click "Run workflow"
+# 3. Enter image tag: main-442b9a8
+# 4. Click "Run workflow"
 
-6. Verify at https://auto-ledger-staging.fly.dev/actuator/health
+# Or via CLI:
+gh workflow run deploy-staging.yml -f image_tag=main-442b9a8
+```
+
+**Step 4: Verify deployment**
+
+```bash
+curl https://auto-ledger-staging.fly.dev/actuator/health
+```
 
 ### Image Retention Policy
 
-- All images are retained in ghcr.io for historical access
-- Use `sha-<commit>` tags to deploy any historical version
-- Cleanup images older than 30 days to manage storage costs:
-  ```bash
-  # Manual cleanup (when needed)
-  gh api repos/adilfulara/auto-ledger/packages/container/auto-ledger/versions \
-    --paginate -q '.[] | select(.updated_at < now - 30 * 24 * 3600 | @uri) | .id'
-  ```
+Images are stored in Fly's registry (`registry.fly.io`):
+
+- **Retention**: Images persist until manually deleted
+- **Storage**: No GitHub Packages costs (using Fly's registry)
+- **Cleanup**: To remove old images, use `flyctl` commands:
+
+```bash
+# List all images (not just deployed ones)
+flyctl image show -a auto-ledger-staging
+
+# Delete specific image version (if needed)
+# Note: Requires manual registry API calls - contact Fly.io support for bulk cleanup
+```
 
 ### Troubleshooting Deployments
 
