@@ -477,3 +477,49 @@ Safely deletes Fly.io applications.
 
 - Issue #32: Setup Fly.io infrastructure for staging deployment
 - Issue #33: CI/CD pipeline for staging
+
+## GitHub Container Registry Setup
+
+**Why:** When deploying Docker images from GitHub Actions to Fly.io, you need registry credentials so Fly.io can pull the image from `ghcr.io`.
+
+### Create GitHub PAT for ghcr.io Access
+
+A Personal Access Token (PAT) with `read:packages` scope allows Fly.io to authenticate with GitHub Container Registry.
+
+1. Go to: https://github.com/settings/tokens/new?scopes=read:packages
+2. **Name:** `auto-ledger-ghcr-readonly`
+3. **Expiration:** 90 days (recommended) or no expiration
+4. **Scope:** Select `read:packages` ✓
+5. **Generate:** Click "Generate token" and copy the value
+
+### Store as GitHub Secret
+
+```bash
+# Via CLI (recommended)
+gh secret set GH_PAT_PACKAGES --body "ghp_your_token_here"
+
+# Or via GitHub UI
+# Settings → Secrets and variables → Actions → New repository secret
+# Name: GH_PAT_PACKAGES
+# Value: (paste token)
+```
+
+### How It Works
+
+The GitHub Actions workflow uses this secret to tell Fly.io:
+- Username: your GitHub username
+- Password: your PAT token
+- Registry: ghcr.io
+
+When Fly.io deploys with `--registry-auth`, it can authenticate and pull the Docker image.
+
+### Token Management
+
+- **Expiration:** Token revoked after expiration date (set reminder to rotate)
+- **Scope:** Limited to `read:packages` only (least privilege)
+- **Visibility:** Only used during GitHub Actions workflow (never exposed in logs)
+- **Revocation:** If compromised, revoke at https://github.com/settings/tokens
+
+### Related Issues
+
+- Issue #33: CI/CD pipeline for staging deployment
