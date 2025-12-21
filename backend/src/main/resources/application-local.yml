@@ -17,6 +17,11 @@ spring:
     schemas: app
     default-schema: app
 
+# Disable authentication for local development
+auth:
+  jwt:
+    enabled: false
+
 logging:
   level:
     root: INFO

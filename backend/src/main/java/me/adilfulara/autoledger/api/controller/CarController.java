@@ -5,6 +5,8 @@ import me.adilfulara.autoledger.api.dto.CarResponse;
 import me.adilfulara.autoledger.api.dto.CarStatsResponse;
 import me.adilfulara.autoledger.api.dto.CreateCarRequest;
 import me.adilfulara.autoledger.api.dto.UpdateCarRequest;
+import me.adilfulara.autoledger.auth.AuthenticatedUser;
+import me.adilfulara.autoledger.auth.CurrentUser;
 import me.adilfulara.autoledger.domain.model.Car;
 import me.adilfulara.autoledger.service.CarService;
 import org.springframework.http.HttpStatus;
@@ -29,11 +31,10 @@ public class CarController {
 
     /**
      * List all cars for the current user.
-     * TODO: Get userId from security context when auth is implemented.
      */
     @GetMapping
-    public ResponseEntity<List<CarResponse>> listCars(@RequestParam UUID userId) {
-        List<Car> cars = carService.getCarsByUserId(userId);
+    public ResponseEntity<List<CarResponse>> listCars(@CurrentUser AuthenticatedUser user) {
+        List<Car> cars = carService.getCarsByUserId(user.userId());
         List<CarResponse> response = cars.stream()
                 .map(CarResponse::from)
                 .toList();
@@ -51,13 +52,12 @@ public class CarController {
 
     /**
      * Create a new car.
-     * TODO: Get userId from security context when auth is implemented.
      */
     @PostMapping
     public ResponseEntity<CarResponse> createCar(
-            @RequestParam UUID userId,
+            @CurrentUser AuthenticatedUser user,
             @Valid @RequestBody CreateCarRequest request) {
-        Car car = carService.createCar(userId, request);
+        Car car = carService.createCar(user.userId(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(CarResponse.from(car));
     }
 

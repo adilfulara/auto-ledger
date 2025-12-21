@@ -20,6 +20,14 @@ spring:
     schemas: app
     default-schema: app
 
+# Authentication: DISABLED for staging until auth provider is configured
+# To enable: Set Fly secrets AUTH_ENABLED=true, JWT_ISSUER_URI, JWT_AUDIENCE
+auth:
+  jwt:
+    enabled: ${AUTH_ENABLED:false}
+    issuer-uri: ${JWT_ISSUER_URI:}
+    audience: ${JWT_AUDIENCE:auto-ledger-staging}
+
 # Production-like logging
 logging:
   level:

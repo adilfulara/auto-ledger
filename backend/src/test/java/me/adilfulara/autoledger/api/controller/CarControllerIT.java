@@ -18,6 +18,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -54,7 +55,14 @@ class CarControllerIT {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private User testUser;
+
+    // Use same UUID as JwtAuthFilter injects when auth is disabled
+    private static final UUID TEST_USER_UUID =
+        UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
 
     @BeforeEach
     void setUp() {
@@ -62,8 +70,15 @@ class CarControllerIT {
         carRepository.deleteAll();
         userRepository.deleteAll();
 
-        testUser = new User("user_car_api_test", "carapi@test.com");
-        testUser = userRepository.save(testUser);
+        // Insert user with specific UUID using JDBC (Spring Data would treat non-null ID as UPDATE)
+        jdbcTemplate.update(
+            "INSERT INTO app.users (id, auth_provider_id, email, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+            TEST_USER_UUID, "test_user_dev", "dev@test.com"
+        );
+
+        // Fetch the created user
+        testUser = userRepository.findById(TEST_USER_UUID)
+            .orElseThrow(() -> new IllegalStateException("Test user not found"));
     }
 
     private Car createTestCar(String make, String model) {
