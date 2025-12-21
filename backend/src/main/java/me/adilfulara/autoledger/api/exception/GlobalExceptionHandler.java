@@ -75,6 +75,30 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(
+            IllegalStateException ex, WebRequest request) {
+        // IllegalStateException from CurrentUserResolver means authentication failed
+        if (ex.getMessage() != null && ex.getMessage().contains("authenticated user")) {
+            ErrorResponse error = ErrorResponse.of(
+                    HttpStatus.UNAUTHORIZED.value(),
+                    "Unauthorized",
+                    "Authentication required",
+                    getPath(request)
+            );
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        // Other IllegalStateExceptions are server errors
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                ex.getMessage(),
+                getPath(request)
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, WebRequest request) {

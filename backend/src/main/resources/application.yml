@@ -32,6 +32,13 @@ management:
     health:
       show-details: when-authorized
 
+# Authentication configuration
+auth:
+  jwt:
+    enabled: ${AUTH_ENABLED:true}
+    issuer-uri: ${JWT_ISSUER_URI:}
+    audience: ${JWT_AUDIENCE:auto-ledger}
+
 # Logging
 logging:
   level:

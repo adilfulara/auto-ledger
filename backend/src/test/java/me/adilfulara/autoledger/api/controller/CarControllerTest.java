@@ -7,6 +7,9 @@ import me.adilfulara.autoledger.api.dto.CreateCarRequest;
 import me.adilfulara.autoledger.api.dto.UpdateCarRequest;
 import me.adilfulara.autoledger.api.exception.GlobalExceptionHandler;
 import me.adilfulara.autoledger.api.exception.ResourceNotFoundException;
+import me.adilfulara.autoledger.auth.AuthenticatedUser;
+import me.adilfulara.autoledger.auth.CurrentUserResolver;
+import me.adilfulara.autoledger.auth.JwtAuthFilter;
 import me.adilfulara.autoledger.domain.model.Car;
 import me.adilfulara.autoledger.domain.model.DistanceUnit;
 import me.adilfulara.autoledger.domain.model.FuelUnit;
@@ -49,11 +52,15 @@ class CarControllerTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID CAR_ID = UUID.randomUUID();
+    private static final AuthenticatedUser TEST_USER = new AuthenticatedUser(
+        USER_ID, "test_user", "test@example.com"
+    );
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(carController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .setCustomArgumentResolvers(new CurrentUserResolver())
                 .build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -76,7 +83,8 @@ class CarControllerTest {
             Car car = createTestCar();
             when(carService.getCarsByUserId(USER_ID)).thenReturn(List.of(car));
 
-            mockMvc.perform(get("/api/cars").param("userId", USER_ID.toString()))
+            mockMvc.perform(get("/api/cars")
+                            .requestAttr(JwtAuthFilter.AUTHENTICATED_USER_ATTRIBUTE, TEST_USER))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$[0].id").value(CAR_ID.toString()))
                     .andExpect(jsonPath("$[0].make").value("Toyota"))
@@ -88,7 +96,8 @@ class CarControllerTest {
         void returnsEmptyList() throws Exception {
             when(carService.getCarsByUserId(USER_ID)).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/cars").param("userId", USER_ID.toString()))
+            mockMvc.perform(get("/api/cars")
+                            .requestAttr(JwtAuthFilter.AUTHENTICATED_USER_ATTRIBUTE, TEST_USER))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$").isEmpty());
@@ -141,7 +150,7 @@ class CarControllerTest {
             when(carService.createCar(eq(USER_ID), any(CreateCarRequest.class))).thenReturn(car);
 
             mockMvc.perform(post("/api/cars")
-                            .param("userId", USER_ID.toString())
+                            .requestAttr(JwtAuthFilter.AUTHENTICATED_USER_ATTRIBUTE, TEST_USER)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
@@ -156,7 +165,7 @@ class CarControllerTest {
                     "", null, null, null, null, null, null);
 
             mockMvc.perform(post("/api/cars")
-                            .param("userId", USER_ID.toString())
+                            .requestAttr(JwtAuthFilter.AUTHENTICATED_USER_ATTRIBUTE, TEST_USER)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
