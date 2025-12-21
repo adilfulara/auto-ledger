@@ -5,11 +5,14 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
@@ -19,11 +22,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit tests for {@link JwtService}.
- * Tests JWT parsing, validation, and JWKS fetching.
+ * Tests JWT parsing, validation, signature verification, and error handling.
+ *
+ * <p>Uses a testable subclass that injects a mock JWKSet to avoid network calls.
  */
+@DisplayName("JwtService Unit Tests")
 class JwtServiceTest {
 
-    private JwtService jwtService;
+    private TestableJwtService jwtService;
+    private AuthProperties authProperties;
     private RSAKey rsaKey;
     private JWSSigner signer;
 
@@ -40,52 +47,162 @@ class JwtServiceTest {
             .generate();
         signer = new RSASSASigner(rsaKey);
 
-        // Note: In real implementation, JwtService will fetch JWKS from issuerUri/.well-known/jwks.json
-        // For unit tests, we'll need to mock the JWKS fetching or use a test-specific constructor
+        // Setup auth properties
+        authProperties = new AuthProperties();
+        authProperties.setIssuerUri(ISSUER);
+        authProperties.setAudience(AUDIENCE);
+        authProperties.setEnabled(true);
+
+        // Create testable JwtService with injected JWKSet
+        JWKSet jwkSet = new JWKSet(rsaKey.toPublicJWK());
+        jwtService = new TestableJwtService(authProperties, jwkSet);
     }
 
-    @Test
-    void validateAndParse_ValidToken_ReturnsClaimsSet() throws Exception {
-        // Arrange
-        String token = createValidToken();
+    @Nested
+    @DisplayName("Valid token validation")
+    class ValidTokenValidation {
 
-        // For this test to work, we need a way to inject the test public key
-        // This is a simplified test - the actual implementation will be tested in integration tests
-        // with a mock JWKS endpoint
+        @Test
+        @DisplayName("should successfully validate and parse a valid token")
+        void shouldValidateValidToken() throws Exception {
+            // Given
+            String token = createValidToken();
 
-        // Act & Assert
-        // This test demonstrates the expected behavior
-        // Actual implementation will be verified in integration tests
+            // When
+            JWTClaimsSet claims = jwtService.validateAndParse(token);
+
+            // Then
+            assertThat(claims.getSubject()).isEqualTo(SUBJECT);
+            assertThat(claims.getStringClaim("email")).isEqualTo(EMAIL);
+            assertThat(claims.getIssuer()).isEqualTo(ISSUER);
+            assertThat(claims.getAudience()).contains(AUDIENCE);
+        }
     }
 
-    @Test
-    void validateAndParse_ExpiredToken_ThrowsException() throws Exception {
-        // Arrange
-        String expiredToken = createExpiredToken();
+    @Nested
+    @DisplayName("Invalid token scenarios")
+    class InvalidTokenScenarios {
 
-        // Act & Assert
-        // Will test with actual implementation
+        @Test
+        @DisplayName("should throw exception for malformed token")
+        void shouldThrowExceptionForMalformedToken() {
+            // Given
+            String malformedToken = "not.a.valid.jwt.token";
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(malformedToken))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Malformed JWT");
+        }
+
+        @Test
+        @DisplayName("should throw exception for token with invalid issuer")
+        void shouldThrowExceptionForInvalidIssuer() throws Exception {
+            // Given
+            String token = createTokenWithIssuer("https://wrong-issuer.com");
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(token))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Invalid issuer");
+        }
+
+        @Test
+        @DisplayName("should throw exception for token with invalid audience")
+        void shouldThrowExceptionForInvalidAudience() throws Exception {
+            // Given
+            String token = createTokenWithAudience("wrong-audience");
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(token))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Invalid audience");
+        }
+
+        @Test
+        @DisplayName("should throw exception for expired token")
+        void shouldThrowExceptionForExpiredToken() throws Exception {
+            // Given
+            String expiredToken = createExpiredToken();
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(expiredToken))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Token expired");
+        }
+
+        @Test
+        @DisplayName("should throw exception for token without expiration")
+        void shouldThrowExceptionForTokenWithoutExpiration() throws Exception {
+            // Given
+            String token = createTokenWithoutExpiration();
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(token))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Token expired");
+        }
+
+        @Test
+        @DisplayName("should throw exception when key ID not found in JWKS")
+        void shouldThrowExceptionWhenKeyIdNotFound() throws Exception {
+            // Given
+            RSAKey differentKey = new RSAKeyGenerator(2048)
+                .keyID("different-key-id")
+                .generate();
+            JWSSigner differentSigner = new RSASSASigner(differentKey);
+
+            String token = createTokenWithSigner(differentSigner, "different-key-id");
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(token))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("No matching key found in JWKS");
+        }
+
+        @Test
+        @DisplayName("should throw exception for token with invalid signature")
+        void shouldThrowExceptionForInvalidSignature() throws Exception {
+            // Given - create token signed with different key than in JWKS
+            RSAKey wrongKey = new RSAKeyGenerator(2048)
+                .keyID("test-key-id")  // Same key ID but different key
+                .generate();
+            JWSSigner wrongSigner = new RSASSASigner(wrongKey);
+
+            String token = createTokenWithSigner(wrongSigner, "test-key-id");
+
+            // When / Then
+            assertThatThrownBy(() -> jwtService.validateAndParse(token))
+                .isInstanceOf(JwtValidationException.class)
+                .hasMessageContaining("Invalid JWT signature");
+        }
     }
 
-    @Test
-    void validateAndParse_InvalidSignature_ThrowsException() {
-        // Arrange
-        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature";
+    // ==================== Helper Methods ====================
 
-        // Act & Assert
-        // Will test with actual implementation
-    }
-
-    /**
-     * Helper method to create a valid JWT for testing.
-     */
     private String createValidToken() throws JOSEException {
+        return createToken(ISSUER, AUDIENCE, new Date(System.currentTimeMillis() + 3600000));
+    }
+
+    private String createExpiredToken() throws JOSEException {
+        return createToken(ISSUER, AUDIENCE, new Date(System.currentTimeMillis() - 3600000));
+    }
+
+    private String createTokenWithIssuer(String issuer) throws JOSEException {
+        return createToken(issuer, AUDIENCE, new Date(System.currentTimeMillis() + 3600000));
+    }
+
+    private String createTokenWithAudience(String audience) throws JOSEException {
+        return createToken(ISSUER, audience, new Date(System.currentTimeMillis() + 3600000));
+    }
+
+    private String createTokenWithoutExpiration() throws JOSEException {
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
             .subject(SUBJECT)
             .claim("email", EMAIL)
             .issuer(ISSUER)
             .audience(AUDIENCE)
-            .expirationTime(new Date(System.currentTimeMillis() + 3600000)) // 1 hour from now
+            // No expiration time
             .issueTime(new Date())
             .build();
 
@@ -98,17 +215,14 @@ class JwtServiceTest {
         return signedJWT.serialize();
     }
 
-    /**
-     * Helper method to create an expired JWT for testing.
-     */
-    private String createExpiredToken() throws JOSEException {
+    private String createToken(String issuer, String audience, Date expirationTime) throws JOSEException {
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
             .subject(SUBJECT)
             .claim("email", EMAIL)
-            .issuer(ISSUER)
-            .audience(AUDIENCE)
-            .expirationTime(new Date(System.currentTimeMillis() - 3600000)) // 1 hour ago
-            .issueTime(new Date(System.currentTimeMillis() - 7200000)) // 2 hours ago
+            .issuer(issuer)
+            .audience(audience)
+            .expirationTime(expirationTime)
+            .issueTime(new Date())
             .build();
 
         SignedJWT signedJWT = new SignedJWT(
@@ -118,5 +232,42 @@ class JwtServiceTest {
 
         signedJWT.sign(signer);
         return signedJWT.serialize();
+    }
+
+    private String createTokenWithSigner(JWSSigner customSigner, String keyId) throws JOSEException {
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+            .subject(SUBJECT)
+            .claim("email", EMAIL)
+            .issuer(ISSUER)
+            .audience(AUDIENCE)
+            .expirationTime(new Date(System.currentTimeMillis() + 3600000))
+            .issueTime(new Date())
+            .build();
+
+        SignedJWT signedJWT = new SignedJWT(
+            new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(keyId).build(),
+            claimsSet
+        );
+
+        signedJWT.sign(customSigner);
+        return signedJWT.serialize();
+    }
+
+    /**
+     * Testable version of JwtService that allows injecting a JWKSet for testing.
+     * Overrides getJwkSet to return the test JWKSet instead of fetching from URL.
+     */
+    private static class TestableJwtService extends JwtService {
+        private final JWKSet testJwkSet;
+
+        public TestableJwtService(AuthProperties authProperties, JWKSet testJwkSet) {
+            super(authProperties);
+            this.testJwkSet = testJwkSet;
+        }
+
+        @Override
+        protected JWKSet getJwkSet(String issuerUri) {
+            return testJwkSet;
+        }
     }
 }

@@ -97,7 +97,7 @@ public class JwtService {
      * @param issuerUri the OIDC issuer URI
      * @return the JWKSet containing public keys
      */
-    private JWKSet getJwkSet(String issuerUri) {
+    protected JWKSet getJwkSet(String issuerUri) {
         return jwksCache.computeIfAbsent(issuerUri, uri -> {
             try {
                 String jwksUri = uri + "/.well-known/jwks.json";
