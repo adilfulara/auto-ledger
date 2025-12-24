@@ -1,4 +1,4 @@
-.PHONY: help build-backend build-frontend test-backend test-frontend dev-db-start dev-db-stop dev-start dev-stop check-coverage
+.PHONY: help build-backend build-frontend test-backend test-frontend dev-db-start dev-db-stop dev-start dev-stop check-coverage auth-enable-staging auth-disable-staging auth-test-staging
 
 # Default target - show help
 .DEFAULT_GOAL := help
@@ -52,3 +52,17 @@ check-coverage: ## Run Tests & Verify 80% Coverage
 	cd backend && ./mvnw verify
 	@echo "🔍 Checking Frontend Coverage..."
 	cd frontend && npm run test:coverage
+
+# --- 🔐 AUTHENTICATION ---
+auth-enable-staging: ## Enable Clerk auth in staging (supports --dry-run)
+	@echo "🔐 Enabling Clerk authentication for staging..."
+	@./scripts/clerk/setup.sh staging $(ARGS)
+
+auth-disable-staging: ## Disable auth in staging
+	@echo "🔓 Disabling authentication for staging..."
+	@flyctl secrets set AUTH_ENABLED=false -a auto-ledger-staging
+	@echo "✅ Auth disabled (will redeploy)"
+
+auth-test-staging: ## Test auth is working in staging
+	@echo "🧪 Testing Clerk authentication in staging..."
+	@./scripts/clerk/test.sh staging $(ARGS)
