@@ -10,7 +10,7 @@
 # Prerequisites:
 #   - Fly CLI installed: brew install flyctl
 #   - Logged in: fly auth login
-#   - Clerk account created and application configured (see docs/CLERK-SETUP.md)
+#   - Clerk account created and application configured (see docs/auth/CLERK-SETUP.md)
 #
 # Safety features:
 #   - Validates issuer URI format (must be HTTPS)
@@ -275,7 +275,7 @@ main() {
     echo "Next steps:"
     echo "  1. Wait for deployment to complete (~30-60 seconds)"
     echo "  2. Create a test user in Clerk Dashboard"
-    echo "  3. Get a JWT token from Clerk (see docs/CLERK-SETUP.md)"
+    echo "  3. Get a JWT token from Clerk (see docs/auth/CLERK-SETUP.md)"
     echo "  4. Test authentication:"
     echo "     ./scripts/test-clerk-auth.sh $ENVIRONMENT --jwt \$TOKEN"
     echo ""

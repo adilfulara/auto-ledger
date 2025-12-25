@@ -10,7 +10,7 @@
 # Prerequisites:
 #   - curl installed
 #   - Auth enabled in the target environment
-#   - Valid JWT token from Clerk (see docs/CLERK-SETUP.md)
+#   - Valid JWT token from Clerk (see docs/auth/CLERK-SETUP.md)
 #
 # Tests performed:
 #   1. Health endpoint (should be 200 without auth)
@@ -124,7 +124,7 @@ prompt_for_jwt() {
   echo "4. Click on an active session or create one"
   echo "5. Copy the JWT token"
   echo ""
-  echo "Or see: docs/CLERK-SETUP.md for detailed instructions"
+  echo "Or see: docs/auth/CLERK-SETUP.md for detailed instructions"
   echo ""
   echo "════════════════════════════════════════════════════════════════"
   echo ""
@@ -329,7 +329,7 @@ main() {
     echo "  1. Verify secrets are set: flyctl secrets list -a auto-ledger-$ENVIRONMENT"
     echo "  2. Check backend logs: fly logs -a auto-ledger-$ENVIRONMENT"
     echo "  3. Decode JWT at: https://jwt.io"
-    echo "  4. See: docs/CLERK-SETUP.md (Troubleshooting section)"
+    echo "  4. See: docs/auth/CLERK-SETUP.md (Troubleshooting section)"
     echo ""
     exit 1
   fi

@@ -200,6 +200,6 @@ Common issues:
 
 ## Related Documentation
 
-- **Clerk Setup Guide:** `../../docs/CLERK-SETUP.md`
-- **Staging Auth:** `../../STAGING-AUTH.md`
+- **Clerk Setup Guide:** `../../../docs/auth/CLERK-SETUP.md`
+- **Staging Auth:** `../../../docs/auth/STAGING-AUTH.md`
 - **Main Scripts README:** `../README.md`

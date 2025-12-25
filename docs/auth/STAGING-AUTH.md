@@ -1,6 +1,6 @@
 # Staging Authentication Setup
 
-> **📖 For detailed Clerk setup instructions**, see [`docs/CLERK-SETUP.md`](docs/CLERK-SETUP.md)
+> **📖 For detailed Clerk setup instructions**, see [CLERK-SETUP.md](CLERK-SETUP.md)
 
 ## Current State (No Auth Provider)
 
@@ -53,7 +53,7 @@ make auth-enable-staging
 
 For a comprehensive step-by-step guide to setting up Clerk, see:
 
-**📖 [`docs/CLERK-SETUP.md`](docs/CLERK-SETUP.md)**
+**📖 [`CLERK-SETUP.md`](CLERK-SETUP.md)**
 
 The guide covers:
 - Creating Clerk account and application
@@ -66,7 +66,7 @@ The guide covers:
 ### Testing Authentication
 
 ```bash
-# Get a JWT token from Clerk (see docs/CLERK-SETUP.md)
+# Get a JWT token from Clerk (see CLERK-SETUP.md)
 export JWT="your-jwt-token-here"
 
 # Test using the script

@@ -259,10 +259,10 @@ curl https://auto-ledger-staging.fly.dev/actuator/health
 
 ## Related Documentation
 
-- **[PRD.md](../PRD.md)** - Complete project architecture and requirements
+- **[PRD.md](../docs/PRD.md)** - Complete project architecture and requirements
 - **[CLAUDE.md](../CLAUDE.md)** - Development workflow and context management
-- **[docs/CLERK-SETUP.md](../docs/CLERK-SETUP.md)** - Comprehensive Clerk setup guide
-- **[STAGING-AUTH.md](../STAGING-AUTH.md)** - Quick reference for staging auth
+- **[docs/CLERK-SETUP.md](../docs/auth/CLERK-SETUP.md)** - Comprehensive Clerk setup guide
+- **[STAGING-AUTH.md](../docs/auth/STAGING-AUTH.md)** - Quick reference for staging auth
 
 ## GitHub Issues
 

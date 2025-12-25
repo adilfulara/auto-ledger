@@ -48,12 +48,12 @@ For interactive API testing, see [testing/README.md](testing/README.md).
 ## Prerequisites
 
 - **Fly CLI**: `brew install flyctl && fly auth login`
-- **Clerk account**: See [docs/CLERK-SETUP.md](../../docs/CLERK-SETUP.md)
+- **Clerk account**: See [docs/auth/CLERK-SETUP.md](../../docs/auth/CLERK-SETUP.md)
 - **Fly.io app**: Must exist before setting auth secrets
 
 ## Related Documentation
 
-- **Complete Setup Guide**: [docs/CLERK-SETUP.md](../../docs/CLERK-SETUP.md)
-- **Quick Reference**: [STAGING-AUTH.md](../../STAGING-AUTH.md)
+- **Complete Setup Guide**: [docs/auth/CLERK-SETUP.md](../../docs/auth/CLERK-SETUP.md)
+- **Quick Reference**: [STAGING-AUTH.md](../../docs/auth/STAGING-AUTH.md)
 - **Testing Guide**: [testing/README.md](testing/README.md)
 - **Issue #54**: Backend Clerk authentication setup
