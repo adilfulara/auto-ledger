@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Required Reading
 
-**ALWAYS read `PRD.md` first** - It contains the complete project architecture, data models, tech stack, and implementation requirements.
+**ALWAYS read `docs/PRD.md` first** - It contains the complete project architecture, data models, tech stack, and implementation requirements.
 
 ## Development Workflow
 
@@ -147,6 +147,12 @@ make build-frontend      # Build Next.js project
 make test-backend        # Run backend tests
 make test-frontend       # Run frontend tests
 make check-coverage      # Verify 80% coverage (REQUIRED before PR)
+
+# Authentication (Staging)
+make auth-enable-staging ARGS="--dry-run"  # Preview Clerk auth setup
+make auth-enable-staging                   # Enable Clerk auth in staging
+make auth-disable-staging                  # Disable auth (use test user)
+make auth-test-staging ARGS="--jwt $TOKEN" # Test auth with JWT
 ```
 
 ## Context Management
@@ -161,20 +167,28 @@ Do not cross-pollinate to save context window.
 ## Critical Testing Requirements
 
 - **Coverage Gate:** 80% minimum (enforced by JaCoCo + Jest)
-- **MPG Calculation:** Must test all 3 cases (normal, partial fill, missed fill) - see PRD.md Section 5
+- **MPG Calculation:** Must test all 3 cases (normal, partial fill, missed fill) - see docs/PRD.md Section 5
 - **Build must fail** if coverage < 80%
 
 ## Key Implementation Notes
 
 - **CDS Optimization:** Already configured in `backend/Dockerfile` for <2s startup
-- **MCP Server:** Backend exposes AI agent interface via SSE (see PRD.md Section 6)
+- **MCP Server:** Backend exposes AI agent interface via SSE (see docs/PRD.md Section 6)
 - **Database:** Single Postgres cluster with 3 logical DBs (dev/staging/prod)
-- **Auth:** Clerk manages users externally (no password storage)
+- **Auth:** Provider-agnostic JWT validation (Clerk recommended, no SDK required)
+
+## Authentication Documentation
+
+- **Setup Guide:** `docs/auth/CLERK-SETUP.md` - Comprehensive Clerk setup for staging/production
+- **Staging Auth:** `docs/auth/STAGING-AUTH.md` - Current state and quick reference
+- **Scripts:** `scripts/clerk/setup.sh` and `scripts/clerk/test.sh`
+- **Testing:** `scripts/clerk/testing/` - Developer helpers for API testing
+- **Architecture:** Backend validates JWTs using JWKS (see `backend/src/main/java/me/adilfulara/autoledger/auth/`)
 
 ## When Working on Issues
 
 1. Check if backend or frontend task (scope your context accordingly)
-2. Read relevant section of PRD.md
+2. Read relevant section of docs/PRD.md
 3. Write failing tests first
 4. Implement to make tests pass
 5. Run `make check-coverage` before committing

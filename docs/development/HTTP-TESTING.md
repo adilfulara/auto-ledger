@@ -1,6 +1,6 @@
 # HTTP Request Files
 
-This directory contains IntelliJ HTTP Client request files for manual API testing.
+The `backend/http/` directory contains IntelliJ HTTP Client request files for manual API testing.
 
 ## Prerequisites
 
@@ -14,6 +14,9 @@ This directory contains IntelliJ HTTP Client request files for manual API testin
 ## Files
 
 ### `cars.http`
+
+**Location:** `backend/http/cars.http`
+
 19 HTTP requests covering the Cars API:
 - List cars by user
 - Get car by ID
@@ -24,6 +27,9 @@ This directory contains IntelliJ HTTP Client request files for manual API testin
 - Error cases (validation, not found)
 
 ### `fillups.http`
+
+**Location:** `backend/http/fillups.http`
+
 23 HTTP requests covering the Fillups API:
 - Get all fillups for a car
 - Get recent fillups (with limit)
