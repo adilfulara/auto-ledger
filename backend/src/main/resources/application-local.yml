@@ -27,3 +27,5 @@ logging:
     root: INFO
     me.adilfulara.autoledger: DEBUG
     org.springframework.jdbc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n"

@@ -34,7 +34,7 @@ logging:
     root: INFO
     me.adilfulara.autoledger: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
 
 # Actuator endpoints for health checks
 management:
