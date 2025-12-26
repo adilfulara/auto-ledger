@@ -93,6 +93,30 @@ This project follows a **TDD + GitHub Issues** workflow:
 
 **CRITICAL:** Never commit directly to `main`. Always use feature branches and PRs.
 
+### Branch Protection Rules
+
+The `main` branch has the following protection rules enforced:
+
+| Rule | Setting | Purpose |
+|------|---------|---------|
+| **Require PR** | ✅ Enabled | All changes must go through a Pull Request |
+| **Required status checks** | `Backend Build & Test` | CI must pass before merge |
+| **Strict status checks** | ✅ Enabled | Branch must be up-to-date with main |
+| **Dismiss stale reviews** | ✅ Enabled | Re-review required after new commits |
+| **Force pushes** | ❌ Blocked | History cannot be rewritten |
+| **Branch deletion** | ❌ Blocked | Main branch cannot be deleted |
+
+### Merge Settings (Clean History)
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| **Squash merge** | ✅ Only allowed | Single commit per PR for clean history |
+| **Merge commits** | ❌ Disabled | Prevents merge commit clutter |
+| **Rebase merge** | ❌ Disabled | Squash is the only option |
+| **Commit title** | PR Title | Uses PR title as commit message |
+| **Commit message** | All commits | Includes all PR commit messages |
+| **Auto-delete branches** | ✅ Enabled | Cleans up merged feature branches |
+
 ## Project Structure
 
 ```
