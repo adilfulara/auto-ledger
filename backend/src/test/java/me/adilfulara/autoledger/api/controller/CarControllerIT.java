@@ -284,4 +284,130 @@ class CarControllerIT {
             assertThat(response.getBody().averageMpg()).isEqualByComparingTo(new BigDecimal("30.00"));
         }
     }
+
+    @Nested
+    @DisplayName("POST /api/cars validation")
+    class CreateCarValidation {
+
+        @Test
+        @DisplayName("returns 400 with field error when name is null")
+        void returns400WhenNameIsNull() {
+            var request = new CreateCarRequest(
+                    "Toyota", "Camry", 2020, null, null,
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+
+            ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+                    "/api/cars", request, ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().fieldErrors())
+                    .anyMatch(fe -> fe.field().equals("name") && fe.message().contains("required"));
+        }
+
+        @Test
+        @DisplayName("returns 400 with field error when year is below 1900")
+        void returns400WhenYearBelow1900() {
+            var request = new CreateCarRequest(
+                    "Toyota", "Camry", 1800, null, "My Car",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+
+            ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+                    "/api/cars", request, ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().fieldErrors())
+                    .anyMatch(fe -> fe.field().equals("year"));
+        }
+
+        @Test
+        @DisplayName("returns 400 with field error when year is above 2100")
+        void returns400WhenYearAbove2100() {
+            var request = new CreateCarRequest(
+                    "Toyota", "Camry", 3000, null, "Future Car",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+
+            ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+                    "/api/cars", request, ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().fieldErrors())
+                    .anyMatch(fe -> fe.field().equals("year"));
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/cars uniqueness constraints")
+    class CreateCarUniqueness {
+
+        @Test
+        @DisplayName("returns 409 when creating car with duplicate VIN")
+        void returns409ForDuplicateVin() {
+            String vin = "1HGBH41JXMN109186";
+
+            // Create first car with VIN
+            var request1 = new CreateCarRequest(
+                    "Toyota", "Camry", 2020, vin, "Car 1",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+            restTemplate.postForEntity("/api/cars", request1, CarResponse.class);
+
+            // Try to create second car with same VIN
+            var request2 = new CreateCarRequest(
+                    "Honda", "Civic", 2021, vin, "Car 2",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+            ResponseEntity<ErrorResponse> response =
+                    restTemplate.postForEntity("/api/cars", request2, ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody().message()).contains("VIN already exists");
+        }
+    }
+
+    @Nested
+    @DisplayName("PUT /api/cars/{id} validation")
+    class UpdateCarValidation {
+
+        @Test
+        @DisplayName("returns 400 when year is below 1900")
+        void returns400WhenYearBelow1900() {
+            // Create valid car first
+            var createRequest = new CreateCarRequest(
+                    "Toyota", "Camry", 2020, null, "My Car",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+            ResponseEntity<CarResponse> createResponse =
+                    restTemplate.postForEntity("/api/cars", createRequest, CarResponse.class);
+            UUID carId = createResponse.getBody().id();
+
+            // Update with invalid year
+            var updateRequest = new UpdateCarRequest(null, null, 1800, null, null);
+            ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                    "/api/cars/" + carId, HttpMethod.PUT,
+                    new HttpEntity<>(updateRequest), ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().fieldErrors())
+                    .anyMatch(fe -> fe.field().equals("year"));
+        }
+
+        @Test
+        @DisplayName("returns 400 when year is above 2100")
+        void returns400WhenYearAbove2100() {
+            // Create valid car first
+            var createRequest = new CreateCarRequest(
+                    "Honda", "Civic", 2021, null, "My Honda",
+                    FuelUnit.GALLONS, DistanceUnit.MILES);
+            ResponseEntity<CarResponse> createResponse =
+                    restTemplate.postForEntity("/api/cars", createRequest, CarResponse.class);
+            UUID carId = createResponse.getBody().id();
+
+            // Update with invalid year
+            var updateRequest = new UpdateCarRequest(null, null, 3000, null, null);
+            ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                    "/api/cars/" + carId, HttpMethod.PUT,
+                    new HttpEntity<>(updateRequest), ErrorResponse.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().fieldErrors())
+                    .anyMatch(fe -> fe.field().equals("year"));
+        }
+    }
 }
