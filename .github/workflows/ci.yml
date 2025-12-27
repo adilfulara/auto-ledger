@@ -98,8 +98,10 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    # Skip frontend until issue #4 is completed
-    if: false
+    env:
+      # Mock key required for build (decodes to "clerk.example.com$") to pass Clerk's structural validation
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: sk_test_mock_key_for_build
 
     steps:
       - name: Checkout code
