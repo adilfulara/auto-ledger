@@ -25,11 +25,12 @@ A production-grade car mileage tracking application that serves both humans (via
 - **Testing:** JUnit 5, Mockito, Testcontainers
 - **Coverage:** 80% minimum (JaCoCo)
 
-### Frontend
-- **Framework:** Next.js 14+ (App Router)
+### Frontend (Next.js 14)
+- **Framework:** Next.js 14 (App Router)
 - **Styling:** Tailwind CSS + Shadcn/UI
-- **State Management:** React Query (TanStack Query)
-- **Testing:** Jest, React Testing Library
+- **State:** TanStack Query + nuqs
+- **Tests:** Jest + RTL (80% coverage)
+- **Auth:** Clerk
 
 ### Infrastructure
 - **Platform:** Fly.io

@@ -68,6 +68,20 @@ make dev-start
 # PostgreSQL at: localhost:5432
 ```
 
+### Frontend Setup
+
+The frontend requires environment variables for Clerk authentication. Create `frontend/.env.local`:
+
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_... # From Clerk Dashboard
+CLERK_SECRET_KEY=sk_test_...                  # From Clerk Dashboard
+```
+
+To run frontend:
+```bash
+cd frontend && npm run dev
+```
+
 ### Spring Profiles
 
 The project uses Spring profiles to manage different environments:
